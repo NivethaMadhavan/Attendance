@@ -218,7 +218,7 @@ async function generateQRCode(res = null) {
         reject(err);
       } else {
         qrCodeCounter++;
-        console.log('QR Code generated successfully:', qrCode);
+        console.log('QR Code generated successfully:', qrCodeCounter);
         if (res) res.send(`<img src="${qrCode}">`);
         resolve(qrCode);
       }
