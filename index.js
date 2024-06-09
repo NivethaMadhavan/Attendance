@@ -1,7 +1,7 @@
 const express = require('express');
 const qr = require('qrcode');
 const ip = require('ip');
-const { Client } = require('pg'); // Using the pg library for PostgreSQL
+const { Client } = require('pg'); // Ensure pg is required correctly
 const bodyParser = require('body-parser');
 
 const app = express();
@@ -214,43 +214,19 @@ async function generateQRCode(res = null) {
     qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
       if (err) {
         console.error('Error generating QR code:', err);
-        if (res) {
-          res.status(500).send('Internal Server Error');
-        }
+        if (res) res.status(500).send('Error generating QR code');
         reject(err);
       } else {
-        console.log(`Generated QR code with data: ${qrCodeData}`);
-        if (res) {
-          setTimeout(() => {
-            let html = `
-              <html>
-                <script>
-                  function msg(text) {
-                    console.log(text);
-                  }
-                  setTimeout(() => { window.location.reload() }, 40000);
-                </script>
-                <body onload='msg("QR Code Loaded")'>
-                  <img src="${qrCode}" alt="QR Code ${qrCodeCounter}" />
-                </body>
-              </html>
-            `;
-            res.send(html);
-            resolve();
-          }, 1000); // Added a slight delay for response
-        } else {
-          resolve();
-        }
+        qrCodeCounter++;
+        console.log('QR Code generated successfully:', qrCode);
+        if (res) res.send(`<img src="${qrCode}">`);
+        resolve(qrCode);
       }
     });
   });
 }
 
-// Update QR code counter and generate new QR code every 30 seconds
-setInterval(() => {
-  qrCodeCounter++;
-  console.log(`QR code counter updated to: ${qrCodeCounter}`);
-  generateQRCode(); // Generate QR code without sending a response
-}, 30000);
-
-app.listen(port, () => console.log(`Server running on http://${localip}:${port}`));
+// Start the server
+app.listen(port, () => {
+  console.log(`Server running at http://${localip}:${port}/`);
+});
