@@ -1,31 +1,32 @@
 const express = require('express');
 const qr = require('qrcode');
 const ip = require('ip');
-const mysql = require('mysql');
+const { Client } = require('pg'); // Using PostgreSQL client
 const bodyParser = require('body-parser');
 
 const app = express();
-const port = 3050;
+const port = process.env.PORT || 3050;
 const localip = ip.address();
 let qrCodeCounter = 0;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// MySQL database connection setup
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'niv123',
-  database: 'Attendence'
+// PostgreSQL database connection setup
+const client = new Client({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
 });
 
-connection.connect(error => {
+client.connect(error => {
   if (error) {
     console.error('Error connecting to the database:', error);
     return;
   }
-  console.log('Connected to the MySQL database.');
+  console.log('Connected to the PostgreSQL database.');
 });
 
 // Endpoint to generate the QR code for the home page
@@ -175,14 +176,14 @@ app.post('/submit', (req, res) => {
     if (qrCodeCounter === requestedQrCode) {
       const clientIp = req.ip;
       // Check if the IP address is already in the table
-      const checkQuery = 'SELECT COUNT(*) AS count FROM FormSubmissions WHERE ip_address = ?';
-      connection.query(checkQuery, [clientIp], (checkError, checkResults) => {
+      const checkQuery = 'SELECT COUNT(*) AS count FROM FormSubmissions WHERE ip_address = $1';
+      client.query(checkQuery, [clientIp], (checkError, checkResults) => {
         if (checkError) {
           console.error('Error checking IP address:', checkError);
           res.status(500).send('Internal Server Error');
           return;
         }
-        const count = checkResults[0].count;
+        const count = checkResults.rows[0].count;
         if (count > 0) {
           // IP address already submitted
           console.log('Form submission rejected: IP address already submitted');
@@ -192,8 +193,8 @@ app.post('/submit', (req, res) => {
           const { name, usn } = req.body;
 
           // Insert the form data into the database
-          const insertQuery = 'INSERT INTO FormSubmissions (name, usn, ip_address) VALUES (?, ?, ?)';
-          connection.query(insertQuery, [name, usn, clientIp], (insertError, insertResults) => {
+          const insertQuery = 'INSERT INTO FormSubmissions (name, usn, ip_address) VALUES ($1, $2, $3)';
+          client.query(insertQuery, [name, usn, clientIp], (insertError, insertResults) => {
             if (insertError) {
               console.error('Error inserting form data:', insertError);
               res.status(500).send('Internal Server Error');
@@ -258,13 +259,12 @@ async function generateQRCode(res = null) {
   });
 }
 
-// Update QR code counter and generate new QR code every 30 seconds
+// Update QR code counter and generate new QR code every 60 seconds
 setInterval(() => {
   qrCodeCounter++;
   console.log(`QR code counter updated to: ${qrCodeCounter}`);
   generateQRCode(); // Generate QR code without sending a response
 }, 30000);
 
-// Start the server
 app.listen(port, () => console.log(`Server running on http://${localip}:${port}`));
 
