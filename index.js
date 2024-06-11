@@ -266,5 +266,5 @@ setInterval(() => {
   generateQRCode(); // Generate QR code without sending a response
 }, 30000);
 
-app.listen(port, () => console.log(`Server running on http://${localip}:${port}`));
+app.listen(port, '0.0.0.0',() => console.log(`Server running on http://${localip}:${port}`));
 
