@@ -28,13 +28,15 @@ const client = new Client({
   port: process.env.DB_PORT,
 });
 
-client.connect(error => {
-  if (error) {
-    console.error('Error connecting to the database:', error);
-    return;
-  }
-  console.log('Connected to the PostgreSQL database.');
+const connectionString = process.env.DB_URI_INTERNAL;
+
+const client = new Client({
+  connectionString,
 });
+
+client.connect()
+  .then(() => console.log('Connected to the database'))
+  .catch(err => console.error('Error connecting to the database:', err));
 
 // Endpoint to generate the QR code for the home page
 app.get('/', async (req, res) => {
