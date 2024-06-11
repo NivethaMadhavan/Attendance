@@ -19,6 +19,8 @@ let qrCodeCounter = 0;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+const connectionString = process.env.DB_URI_INTERNAL;
+
 // PostgreSQL database connection setup
 const client = new Client({
   host: process.env.DB_HOST,
@@ -26,12 +28,7 @@ const client = new Client({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   port: process.env.DB_PORT,
-});
-
-const connectionString = process.env.DB_URI_INTERNAL;
-
-const client = new Client({
-  connectionString,
+  connectionString
 });
 
 client.connect()
