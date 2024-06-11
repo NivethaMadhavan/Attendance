@@ -5,7 +5,7 @@ const { Client } = require('pg'); // Using PostgreSQL client
 const bodyParser = require('body-parser');
 
 const app = express();
-const port = process.env.PORT || 3050;
+const port = process.env.PORT || 10000;
 const localip = ip.address();
 let qrCodeCounter = 0;
 
