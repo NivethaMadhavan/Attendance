@@ -220,13 +220,33 @@ async function generateQRCode(res = null) {
     qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
       if (err) {
         console.error('Error generating QR code:', err);
-        if (res) res.status(500).send('Error generating QR code');
+        if (res) {
+          res.status(500).send('Internal Server Error');
+        }
         reject(err);
       } else {
-        qrCodeCounter++;
-        console.log('QR Code generated successfully:', qrCodeCounter);
-        if (res) res.send(`<img src="${qrCode}">`);
-        resolve(qrCode);
+        console.log(`Generated QR code with data: ${qrCodeData}`);
+        if (res) {
+          setTimeout(() => {
+            let html = `
+              <html>
+                <script>
+                  function msg(text) {
+                    console.log(text);
+                  }
+                  setTimeout(() => { window.location.reload() }, 30000);
+                </script>
+                <body onload='msg("QR Code Loaded")'>
+                  <img src="${qrCode}" alt="QR Code ${qrCodeCounter}" />
+                </body>
+              </html>
+            `;
+            res.send(html);
+            resolve();
+          }, 1000); // Added a slight delay for response
+        } else {
+          resolve();
+        }
       }
     });
   });
