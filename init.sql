@@ -7,3 +7,5 @@ CREATE TABLE IF NOT EXISTS "FormSubmissions" (
   ip_address VARCHAR(50) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+SELECT * FROM Formsubmissions;
