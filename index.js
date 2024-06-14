@@ -240,17 +240,40 @@ async function generateQRCode(res = null) {
       } else {
         console.log(`Generated QR code with data: ${qrCodeData}`);
         if (res) {
-          res.send(qrCode); // Send the QR code image data directly
-          resolve(qrCodeData);
+          res.send(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>QR Code</title>
+            </head>
+            <body>
+              <h1>Scan the QR code</h1>
+              <img id="qrCodeImage" src="${qrCode}" alt="QR Code">
+              <script>
+                function fetchNewQRCode() {
+                  fetch('/new-qrcode')
+                    .then(response => response.json())
+                    .then(data => {
+                      document.getElementById('qrCodeImage').src = data.qrCodeData;
+                    })
+                    .catch(error => console.error('Error fetching new QR code:', error));
+                }
+                setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
+              </script>
+            </body>
+            </html>
+          `);
         } else {
-          resolve(qrCodeData);
+          resolve(qrCode);
         }
       }
     });
   });
 }
 
-// Update QR code counter and generate new QR code every 30 seconds
+// Update QR code counter and generate a new QR code every 30 seconds
 setInterval(() => {
   qrCodeCounter++;
   console.log(`QR code counter updated to: ${qrCodeCounter}`);
