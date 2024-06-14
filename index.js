@@ -23,7 +23,7 @@ const connectionString = process.env.DB_URI_INTERNAL;
 
 // PostgreSQL database connection setup
 const client = new Client({
-  connectionString: process.env.DB_URI_INTERNAL
+  connectionString: connectionString
 });
 
 client.connect()
@@ -42,7 +42,7 @@ app.get('/', async (req, res) => {
 });
 
 // Endpoint to handle the QR code validation and show the form
-app.get('/submit', async (req, res) => {
+app.get('/submit', (req, res) => {
   console.log('start: qrCodeCounter:', qrCodeCounter);
   try {
     const requestedQrCode = parseInt(req.query.qrcode);
