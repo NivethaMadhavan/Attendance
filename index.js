@@ -55,7 +55,7 @@ app.get('/new-qrcode', async (req, res) => {
 
 // Endpoint to handle the QR code validation and show the form
 app.get('/submit', async (req, res) => {
-  console.log('start: qrCodeCounter:', qrCodeCounter);
+  console.log('Start: qrCodeCounter:', qrCodeCounter);
   try {
     const requestedQrCode = parseInt(req.query.qrcode);
     console.log(`Received submit request with qrcode: ${requestedQrCode}, current qrCodeCounter: ${qrCodeCounter}`);
@@ -64,99 +64,104 @@ app.get('/submit', async (req, res) => {
       res.send('Rejected');
     } else {
       res.send(`
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Attendance</title>
-        <link rel="icon" href="letter_logo.png" type="image/x-icon">
-        <style>
-          body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: teal;
-            background-size: contain;
-            background-image: url("hire_now_bg.jpg") fixed;
-            background-position: center;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: navy;
-          }
-          h2 {
-            color: white;
-            font-weight: 700;
-            font-size: 28px;
-            text-align: center;
-          }
-          form {
-            backdrop-filter: blur(100px);
-            padding: 20px;
-            padding-right: 70px;
-            padding-left: 50px;
-            box-shadow: 0px 4px 6px #38497C;
-            border-radius: 15px;
-            width: 500px;
-          }
-          label {
-            display: block;
-            margin-bottom: 10px;
-            color: black;
-            font-size: 22px;
-          }
-          input, textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: none;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            color: black;
-          }
-          input {
-            height: 40px;
-          }
-          textarea {
-            height: 110px;
-          }
-          button {
-            background-color: #5F7DEF;
-            color: black;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-          }
-          button:hover {
-            background-color: #3e4093;
-            color: white;
-          }
-        </style>
-      </head>
-      <body>
-        <form id="hire_now" action="/submit" method="post">
-          <h2>Accepted! Enter details:</h2>
-          <label for="name">Your Name:</label>
-          <input type="text" id="name" name="name" required>
-          <label for="usn">USN:</label>
-          <input type="text" id="usn" name="usn">
-          <input type="hidden" id="qrcode" name="qrcode" value="${qrCodeCounter}">
-          <button type="submit">Submit</button>
-        </form>
-        <script>
-          function updateQRCodeValue() {
-            console.log("Start");
-          }
-          updateQRCodeValue();
-        </script>
-      </body>
-      </html>
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Attendance</title>
+          <link rel="icon" href="letter_logo.png" type="image/x-icon">
+          <style>
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              background-color: teal;
+              background-size: contain;
+              background-image: url("hire_now_bg.jpg") fixed;
+              background-position: center;
+              margin: 0;
+              padding: 0;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+              color: navy;
+            }
+            h2 {
+              color: white;
+              font-weight: 700;
+              font-size: 28px;
+              text-align: center;
+            }
+            form {
+              backdrop-filter: blur(100px);
+              padding: 20px;
+              padding-right: 70px;
+              padding-left: 50px;
+              box-shadow: 0px 4px 6px #38497C;
+              border-radius: 15px;
+              width: 500px;
+            }
+            label {
+              display: block;
+              margin-bottom: 10px;
+              color: black;
+              font-size: 22px;
+            }
+            input, textarea {
+              width: 100%;
+              padding: 10px;
+              margin-bottom: 15px;
+              border: none;
+              border-radius: 8px;
+              background: rgba(255, 255, 255, 0.1);
+              color: black;
+            }
+            input {
+              height: 40px;
+            }
+            textarea {
+              height: 110px;
+            }
+            button {
+              background-color: #5F7DEF;
+              color: black;
+              padding: 10px 15px;
+              border: none;
+              border-radius: 8px;
+              cursor: pointer;
+              transition: background-color 0.3s ease;
+            }
+            button:hover {
+              background-color: #3e4093;
+              color: white;
+            }
+          </style>
+        </head>
+        <body>
+          <form id="hire_now" action="/submit" method="post">
+            <h2>Accepted! Enter details:</h2>
+            <label for="name">Your Name:</label>
+            <input type="text" id="name" name="name" required>
+            <label for="usn">USN:</label>
+            <input type="text" id="usn" name="usn">
+            <input type="hidden" id="qrcode" name="qrcode" value="${qrCodeCounter}">
+            <button type="submit">Submit</button>
+          </form>
+          <script>
+            function fetchNewQRCode() {
+              fetch('/new-qrcode')
+                .then(response => response.json())
+                .then(data => {
+                  document.getElementById('qrCodeImage').src = data.qrCodeData;
+                })
+                .catch(error => console.error('Error fetching new QR code:', error));
+            }
+            setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
+          </script>
+        </body>
+        </html>
       `);
-      console.log('end: qrCodeCounter:', qrCodeCounter);
+      console.log('End: qrCodeCounter:', qrCodeCounter);
     }
   } catch (error) {
     console.error('Error processing submit request:', error);
@@ -235,35 +240,17 @@ async function generateQRCode(res = null) {
       } else {
         console.log(`Generated QR code with data: ${qrCodeData}`);
         if (res) {
-          let html = `
-            <html>
-              <body>
-                <img id="qrCodeImage" src="${qrCode}" alt="QR Code ${qrCodeCounter}" />
-                <script>
-                  function fetchNewQRCode() {
-                    fetch('/new-qrcode')
-                      .then(response => response.json())
-                      .then(data => {
-                        document.getElementById('qrCodeImage').src = data.qrCodeData;
-                      })
-                      .catch(error => console.error('Error fetching new QR code:', error));
-                  }
-                  setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
-                </script>
-              </body>
-            </html>
-          `;
-          res.send(html);
-          resolve();
+          res.send(qrCode); // Send the QR code image data directly
+          resolve(qrCodeData);
         } else {
-          resolve();
+          resolve(qrCodeData);
         }
       }
     });
   });
 }
 
-// Update QR code counter and generate new QR code every 60 seconds
+// Update QR code counter and generate new QR code every 30 seconds
 setInterval(() => {
   qrCodeCounter++;
   console.log(`QR code counter updated to: ${qrCodeCounter}`);
