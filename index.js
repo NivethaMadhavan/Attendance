@@ -15,7 +15,6 @@ if (port < 0 || port > 65535) {
 
 const localip = ip.address();
 let qrCodeCounter = 0;
-let qrCodeData = ''; // Store the latest QR code data
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -24,7 +23,7 @@ const connectionString = process.env.DB_URI_INTERNAL;
 
 // PostgreSQL database connection setup
 const client = new Client({
-  connectionString: connectionString
+  connectionString: process.env.DB_URI_INTERNAL
 });
 
 client.connect()
@@ -35,7 +34,7 @@ client.connect()
 app.get('/', async (req, res) => {
   try {
     console.log('Generating QR code for home page');
-    await generateQRCode(res); // Call generateQRCode function to generate and send QR code to response
+    await generateQRCode(res);
   } catch (error) {
     console.error('Error generating QR code:', error);
     res.status(500).send('Internal Server Error');
@@ -46,7 +45,7 @@ app.get('/', async (req, res) => {
 app.get('/new-qrcode', async (req, res) => {
   try {
     console.log('Generating new QR code');
-    qrCodeData = await generateQRCode(); // Update qrCodeData with new QR code data
+    const qrCodeData = await generateQRCode();
     res.json({ qrCodeData });
   } catch (error) {
     console.error('Error generating new QR code:', error);
@@ -56,6 +55,7 @@ app.get('/new-qrcode', async (req, res) => {
 
 // Endpoint to handle the QR code validation and show the form
 app.get('/submit', async (req, res) => {
+  console.log('Start: qrCodeCounter:', qrCodeCounter);
   try {
     const requestedQrCode = parseInt(req.query.qrcode);
     console.log(`Received submit request with qrcode: ${requestedQrCode}, current qrCodeCounter: ${qrCodeCounter}`);
@@ -69,11 +69,10 @@ app.get('/submit', async (req, res) => {
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Attendance Form</title>
+          <title>Attendance</title>
           <link rel="icon" href="letter_logo.png" type="image/x-icon">
           <style>
-            /* Add your CSS styles here */
-           body {
+            body {
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               background-color: teal;
               background-size: contain;
@@ -139,8 +138,8 @@ app.get('/submit', async (req, res) => {
           </style>
         </head>
         <body>
-          <form id="attendanceForm" action="/submit" method="post" onsubmit="return checkLocalStorage();">
-            <h2>Attendance Form</h2>
+          <form id="hire_now" action="/submit" method="post">
+            <h2>Accepted! Enter details:</h2>
             <label for="name">Your Name:</label>
             <input type="text" id="name" name="name" required>
             <label for="usn">USN:</label>
@@ -149,102 +148,136 @@ app.get('/submit', async (req, res) => {
             <button type="submit">Submit</button>
           </form>
           <script>
-            const TIME_LIMIT = 60 * 60 * 1000; // 1 hour in milliseconds
-
-            function checkLocalStorage() {
-              const formSubmitted = localStorage.getItem('formSubmitted');
-              const submissionTime = localStorage.getItem('submissionTime');
-              const currentTime = Date.now();
-
-              if (formSubmitted && submissionTime) {
-                const timeElapsed = currentTime - parseInt(submissionTime, 10);
-                
-                if (timeElapsed < TIME_LIMIT) {
-                  alert('Form already submitted from this device. Please wait before submitting again.');
-                  return false; // Prevent form submission
-                } else {
-                  // Time limit has passed, allow submission and update timestamp
-                  localStorage.setItem('submissionTime', currentTime.toString());
-                  return true; // Allow form submission
-                }
-              } else {
-                // First submission or local storage is cleared
-                localStorage.setItem('formSubmitted', 'true');
-                localStorage.setItem('submissionTime', currentTime.toString());
-                return true; // Allow form submission
-              }
+            function fetchNewQRCode() {
+              fetch('/new-qrcode')
+                .then(response => response.json())
+                .then(data => {
+                  document.getElementById('qrCodeImage').src = data.qrCodeData;
+                })
+                .catch(error => console.error('Error fetching new QR code:', error));
             }
+            setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
           </script>
         </body>
         </html>
       `);
+      console.log('End: qrCodeCounter:', qrCodeCounter);
     }
   } catch (error) {
-    console.error('Error handling submit request:', error);
+    console.error('Error processing submit request:', error);
+    res.status(500).send('Internal Server Error');
+  }
+  console.log('qrCodeCounter:', qrCodeCounter);
+});
+
+// POST route handler for form submission
+app.post('/submit', (req, res) => {
+  console.log('Request body:', req.body); 
+  try {
+    const requestedQrCode = parseInt(req.body.qrcode); // Retrieve from request body, not query
+    console.log(`Received submit request with qrcode: ${requestedQrCode}, current qrCodeCounter: ${qrCodeCounter}`);
+    console.log(typeof qrCodeCounter, typeof requestedQrCode);
+
+    const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    
+    if (qrCodeCounter === requestedQrCode) {
+      // Check if the IP address is already in the table
+      const checkQuery = 'SELECT COUNT(*) AS count FROM "FormSubmissions" WHERE ip_address = $1';
+      client.query(checkQuery, [clientIp], (checkError, checkResults) => {
+        if (checkError) {
+          console.error('Error checking IP address:', checkError);
+          res.status(500).send('Internal Server Error');
+          return;
+        }
+        const count = checkResults.rows[0].count;
+        if (count > 0) {
+          // IP address already submitted
+          console.log('Form submission rejected: IP address already submitted');
+          res.send('Form submission rejected: IP address already submitted');
+        } else {
+          // Extract form data from the request
+          const { name, usn } = req.body;
+
+          // Insert the form data into the database
+          const insertQuery = 'INSERT INTO "FormSubmissions" (name, usn, ip_address) VALUES ($1, $2, $3)';
+          client.query(insertQuery, [name, usn, clientIp], (insertError, insertResults) => {
+            if (insertError) {
+              console.error('Error inserting form data:', insertError);
+              res.status(500).send('Internal Server Error');
+            } else {
+              console.log('Form data inserted successfully');
+              res.send('Form submitted successfully');
+            }
+          });
+        }
+      });
+    } else {
+      // QR code doesn't match
+      console.log('Form submission rejected: QR code mismatch');
+      res.send('Form submission rejected: QR code mismatch');
+    }
+  } catch (error) {
+    console.error('Error processing form submission:', error);
     res.status(500).send('Internal Server Error');
   }
 });
 
-// Endpoint to handle form submissions
-app.post('/submit', async (req, res) => {
-  try {
-    const { name, usn, qrcode } = req.body;
-    const requestedQrCode = parseInt(qrcode);
+// Function to generate the QR code
+async function generateQRCode(res = null) {
+  return new Promise((resolve, reject) => {
+    const randomComponent = Math.floor(Math.random() * 1000);
+    const timestamp = new Date().getTime();
+    const cloudURL = `https://attendance-4au9.onrender.com/submit`; // Replace with your cloud URL
+    const qrCodeData = `${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}`;
 
-    if (qrCodeCounter !== requestedQrCode) {
-      res.send('Invalid request');
-      return;
-    }
-
-    const currentTime = new Date().toISOString(); // Ensure date format is compatible with PostgreSQL
-    const queryText = 'INSERT INTO attendance (name, usn, submission_time) VALUES ($1, $2, $3)';
-    const values = [name, usn, currentTime];
-
-    await client.query(queryText, values);
-    console.log(`Inserted data into PostgreSQL: ${name}, ${usn}, ${currentTime}`);
-
-    res.send('Form submitted successfully');
-  } catch (error) {
-    console.error('Error handling form submission:', error);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
-// Function to generate QR code and send to response
-async function generateQRCode(res) {
-  try {
-    qrCodeCounter++;
-    qrCodeData = await qr.toDataURL(`Attendance code: ${qrCodeCounter}`);
-    if (res) {
-      res.send(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Attendance QR Code</title>
-        </head>
-        <body>
-          <img src="${qrCodeData}" alt="QR Code">
-        </body>
-        </html>
-      `);
-    }
-    return qrCodeData;
-  } catch (error) {
-    console.error('Error generating QR code:', error);
-    throw error;
-  }
+    qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
+      if (err) {
+        console.error('Error generating QR code:', err);
+        if (res) {
+          res.status(500).send('Internal Server Error');
+        }
+        reject(err);
+      } else {
+        console.log(`Generated QR code with data: ${qrCodeData}`);
+        if (res) {
+          res.send(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>QR Code</title>
+            </head>
+            <body>
+              <h1>Scan the QR code</h1>
+              <img id="qrCodeImage" src="${qrCode}" alt="QR Code">
+              <script>
+                function fetchNewQRCode() {
+                  fetch('/new-qrcode')
+                    .then(response => response.json())
+                    .then(data => {
+                      document.getElementById('qrCodeImage').src = data.qrCodeData;
+                    })
+                    .catch(error => console.error('Error fetching new QR code:', error));
+                }
+                setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
+              </script>
+            </body>
+            </html>
+          `);
+        } else {
+          resolve(qrCode);
+        }
+      }
+    });
+  });
 }
 
 // Update QR code counter and generate a new QR code every 30 seconds
-setInterval(async () => {
-  try {
-    qrCodeData = await generateQRCode(); // Generate new QR code data
-    console.log(`QR code counter updated to: ${qrCodeCounter}`);
-  } catch (error) {
-    console.error('Error updating QR code:', error);
-  }
+setInterval(() => {
+  qrCodeCounter++;
+  console.log(`QR code counter updated to: ${qrCodeCounter}`);
+  generateQRCode(); // Generate QR code without sending a response
 }, 30000);
 
 // Start the server
