@@ -166,8 +166,9 @@ app.post('/submit', (req, res) => {
     console.log(`Received submit request with qrcode: ${requestedQrCode}, current qrCodeCounter: ${qrCodeCounter}`);
     console.log(typeof qrCodeCounter, typeof requestedQrCode);
 
+    const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    
     if (qrCodeCounter === requestedQrCode) {
-      const clientIp = req.ip;
       // Check if the IP address is already in the table
       const checkQuery = 'SELECT COUNT(*) AS count FROM "FormSubmissions" WHERE ip_address = $1';
       client.query(checkQuery, [clientIp], (checkError, checkResults) => {
@@ -214,8 +215,8 @@ async function generateQRCode(res = null) {
   return new Promise((resolve, reject) => {
     const randomComponent = Math.floor(Math.random() * 1000);
     const timestamp = new Date().getTime();
-    const fixedURL = `http://${localip}:${port}/submit`;
-    const qrCodeData = `${fixedURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}`;
+    const cloudURL = `https://attendance-4au9.onrender.com/submit`; // Replace with your cloud URL
+    const qrCodeData = `${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}`;
 
     qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
       if (err) {
