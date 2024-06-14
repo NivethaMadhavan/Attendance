@@ -21,14 +21,17 @@ app.use(bodyParser.json());
 
 const connectionString = process.env.DB_URI_INTERNAL;
 
+console.log("Connecting to database");
 // PostgreSQL database connection setup
 const client = new Client({
   connectionString: connectionString
 });
-
+console.log("Database connection string is " + connectionString);
+console.log("Client state is " + client);
 client.connect()
   .then(() => console.log('Connected to the database'))
   .catch(err => console.error('Error connecting to the database:', err));
+console.log("Client state is " + client);
 
 // Endpoint to generate the QR code for the home page
 app.get('/', async (req, res) => {
