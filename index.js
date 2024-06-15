@@ -29,11 +29,64 @@ client.connect()
   .then(() => console.log('Connected to the database'))
   .catch(err => console.error('Error connecting to the database:', err));
 
+// Function to generate the QR code
+async function generateQRCode(res = null, req = null) {
+  const randomComponent = Math.floor(Math.random() * 1000);
+  const timestamp = new Date().getTime();
+  const cloudURL = `https://attendance-4au9.onrender.com/submit`;
+  const qrCodeData = `${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}`;
+
+  return new Promise((resolve, reject) => {
+    qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
+      if (err) {
+        console.error('Error generating QR code:', err);
+        if (res) {
+          res.status(500).send('Internal Server Error');
+        }
+        reject(err);
+      } else {
+        console.log(`Generated QR code with data: ${qrCodeData}`);
+        if (res) {
+          res.send(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>QR Code</title>
+            </head>
+            <body>
+              <h1>Scan the QR code</h1>
+              <img id="qrCodeImage" src="${qrCode}" alt="QR Code">
+              <script>
+                function fetchNewQRCode() {
+                  fetch('/new-qrcode')
+                    .then(response => response.json())
+                    .then(data => {
+                      document.getElementById('qrCodeImage').src = data.qrCodeData;
+                    })
+                    .catch(error => console.error('Error fetching new QR code:', error));
+                }
+                setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
+                fetchNewQRCode(); // Initial fetch
+              </script>
+            </body>
+            </html>
+          `);
+        } else {
+          resolve(qrCode);
+        }
+      }
+    });
+  });
+}
+
 // Endpoint to generate the QR code for the home page
 app.get('/', async (req, res) => {
   try {
     console.log('Generating QR code for home page');
     await generateQRCode(res, req);
+    qrCodeCounter++;
   } catch (error) {
     console.error('Error generating QR code:', error);
     res.status(500).send('Internal Server Error');
@@ -45,6 +98,7 @@ app.get('/new-qrcode', async (req, res) => {
   try {
     console.log('Generating new QR code');
     const qrCodeData = await generateQRCode(null, req);
+    qrCodeCounter++;
     res.json({ qrCodeData });
   } catch (error) {
     console.error('Error generating new QR code:', error);
@@ -195,6 +249,7 @@ app.post('/submit', (req, res) => {
         const count = checkResults.rows[0].count;
         if (count > 0) {
           // Fingerprint already submitted
+          // Fingerprint already submitted
           console.log('Form submission rejected: Fingerprint already submitted');
           res.send('Form submission rejected: Fingerprint already submitted');
         } else {
@@ -225,67 +280,23 @@ app.post('/submit', (req, res) => {
   }
 });
 
-// Function to generate the QR code
-async function generateQRCode(res = null, req) {
-  return new Promise((resolve, reject) => {
-    const randomComponent = Math.floor(Math.random() * 1000);
-    const timestamp = new Date().getTime();
-    const cloudURL = `https://attendance-4au9.onrender.com/submit`;
-        const qrCodeData = `${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}`;
-
-    qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
-      if (err) {
-        console.error('Error generating QR code:', err);
-        if (res) {
-          res.status(500).send('Internal Server Error');
-        }
-        reject(err);
-      } else {
-        console.log(`Generated QR code with data: ${qrCodeData}`);
-        if (res) {
-          res.send(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>QR Code</title>
-            </head>
-            <body>
-              <h1>Scan the QR code</h1>
-              <img id="qrCodeImage" src="${qrCode}" alt="QR Code">
-              <script>
-                function fetchNewQRCode() {
-                  fetch('/new-qrcode')
-                    .then(response => response.json())
-                    .then(data => {
-                      document.getElementById('qrCodeImage').src = data.qrCodeData;
-                    })
-                    .catch(error => console.error('Error fetching new QR code:', error));
-                }
-                setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
-                fetchNewQRCode(); // Initial fetch
-              </script>
-            </body>
-            </html>
-          `);
-        } else {
-          resolve(qrCode);
-        }
-      }
-    });
-  });
+// Function to periodically generate new QR code
+function generateQRCodePeriodically() {
+  setInterval(async () => {
+    try {
+      console.log('Generating new QR code periodically');
+      await generateQRCode();
+      qrCodeCounter++;
+    } catch (error) {
+      console.error('Error generating QR code periodically:', error);
+    }
+  }, 30000); // Generate a new QR code every 30 seconds
 }
 
-// Update QR code counter and generate a new QR code every 30 seconds
-setInterval(() => {
-  qrCodeCounter++;
-  console.log(`QR code counter updated to: ${qrCodeCounter}`);
-  generateQRCode(); // Generate QR code without sending a response
-}, 30000);
+// Start the periodic QR code generation
+generateQRCodePeriodically();
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+app.listen(port, localip, () => {
+  console.log(`Server is running on http://${localip}:${port}`);
 });
 
