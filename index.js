@@ -169,7 +169,7 @@ app.post('/submit', (req, res) => {
 
     generateDeviceFingerprint(req)
       .then(clientFingerprint => {
-        const checkQuery = 'SELECT COUNT(*) AS count FROM "FormSubmissions" WHERE client_fingerprint = $1';
+        const checkQuery = 'SELECT COUNT(*) AS count FROM "FormSubmissions" WHERE device_fingerprint = $1';
         client.query(checkQuery, [clientFingerprint], (checkError, checkResults) => {
           if (checkError) {
             console.error('Error checking fingerprint:', checkError);
@@ -183,7 +183,7 @@ app.post('/submit', (req, res) => {
           } else {
             const { name, usn } = req.body;
 
-            const insertQuery = 'INSERT INTO "FormSubmissions" (name, usn, client_fingerprint) VALUES ($1, $2, $3)';
+            const insertQuery = 'INSERT INTO "FormSubmissions" (name, usn, device_fingerprint) VALUES ($1, $2, $3)';
             client.query(insertQuery, [name, usn, clientFingerprint], (insertError, insertResults) => {
               if (insertError) {
                 console.error('Error inserting form data:', insertError);
