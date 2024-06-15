@@ -2,7 +2,6 @@ const express = require('express');
 const qr = require('qrcode');
 const bodyParser = require('body-parser');
 const { Client } = require('pg');
-const FingerprintJS = require('@fingerprintjs/fingerprintjs');
 const ip = require('ip');
 
 const app = express();
@@ -29,14 +28,6 @@ const client = new Client({
 client.connect()
   .then(() => console.log('Connected to the database'))
   .catch(err => console.error('Error connecting to the database:', err));
-
-// Function to generate device fingerprint
-async function generateDeviceFingerprint(req) {
-  const fpPromise = FingerprintJS.load();
-  const fp = await fpPromise;
-  const result = await fp.get();
-  return result.visitorId;
-}
 
 // Endpoint to generate the QR code for the home page
 app.get('/', async (req, res) => {
@@ -144,6 +135,7 @@ app.get('/submit', async (req, res) => {
               color: white;
             }
           </style>
+          <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
         </head>
         <body>
           <form id="hire_now" action="/submit" method="post">
@@ -153,8 +145,17 @@ app.get('/submit', async (req, res) => {
             <label for="usn">USN:</label>
             <input type="text" id="usn" name="usn">
             <input type="hidden" id="qrcode" name="qrcode" value="${qrCodeCounter}">
+            <input type="hidden" id="clientFingerprint" name="clientFingerprint">
             <button type="submit">Submit</button>
           </form>
+          <script>
+            async function generateFingerprint() {
+              const fp = await FingerprintJS.load();
+              const result = await fp.get();
+              document.getElementById('clientFingerprint').value = result.visitorId;
+            }
+            generateFingerprint();
+          </script>
         </body>
         </html>
       `);
@@ -175,39 +176,49 @@ app.post('/submit', (req, res) => {
     console.log(`Received submit request with qrcode: ${requestedQrCode}, current qrCodeCounter: ${qrCodeCounter}`);
     console.log(typeof qrCodeCounter, typeof requestedQrCode);
 
-    generateDeviceFingerprint(req)
-      .then(clientFingerprint => {
-        const checkQuery = 'SELECT COUNT(*) AS count FROM "FormSubmissions" WHERE device_fingerprint = $1';
-        client.query(checkQuery, [clientFingerprint], (checkError, checkResults) => {
-          if (checkError) {
-            console.error('Error checking fingerprint:', checkError);
-            res.status(500).send('Internal Server Error');
-            return;
-          }
-          const count = checkResults.rows[0].count;
-          if (count > 0) {
-            console.log('Form submission rejected: Fingerprint already submitted');
-            res.send('Form submission rejected: Fingerprint already submitted');
-          } else {
-            const { name, usn } = req.body;
+    const clientFingerprint = req.body.clientFingerprint;
 
-            const insertQuery = 'INSERT INTO "FormSubmissions" (name, usn, device_fingerprint) VALUES ($1, $2, $3)';
-            client.query(insertQuery, [name, usn, clientFingerprint], (insertError, insertResults) => {
-              if (insertError) {
-                console.error('Error inserting form data:', insertError);
-                res.status(500).send('Internal Server Error');
-              } else {
-                console.log('Form data inserted successfully');
-                res.send('Form submitted successfully');
-              }
-            });
-          }
-        });
-      })
-      .catch(error => {
-        console.error('Error generating fingerprint:', error);
-        res.status(500).send('Internal Server Error');
+    if (!clientFingerprint) {
+      res.status(400).send('Bad Request: Missing client fingerprint');
+      return;
+    }
+   
+    if (qrCodeCounter === requestedQrCode) {
+      // Check if the fingerprint is already in the table
+      const checkQuery = 'SELECT COUNT(*) AS count FROM "FormSubmissions" WHERE client_fingerprint = $1';
+      client.query(checkQuery, [clientFingerprint], (checkError, checkResults) => {
+        if (checkError) {
+          console.error('Error checking fingerprint:', checkError);
+          res.status(500).send('Internal Server Error');
+          return;
+        }
+        const count = checkResults.rows[0].count;
+        if (count > 0) {
+          // Fingerprint already submitted
+          console.log('Form submission rejected: Fingerprint already submitted');
+          res.send('Form submission rejected: Fingerprint already submitted');
+        } else {
+          // Extract form data from the request
+          const { name, usn } = req.body;
+
+          // Insert the form data into the database
+          const insertQuery = 'INSERT INTO "FormSubmissions" (name, usn, client_fingerprint) VALUES ($1, $2, $3)';
+          client.query(insertQuery, [name, usn, clientFingerprint], (insertError, insertResults) => {
+            if (insertError) {
+              console.error('Error inserting form data:', insertError);
+              res.status(500).send('Internal Server Error');
+            } else {
+              console.log('Form data inserted successfully');
+              res.send('Form submitted successfully');
+            }
+          });
+        }
       });
+    } else {
+      // QR code doesn't match
+      console.log('Form submission rejected: QR code mismatch');
+      res.send('Form submission rejected: QR code mismatch');
+    }
   } catch (error) {
     console.error('Error processing form submission:', error);
     res.status(500).send('Internal Server Error');
@@ -220,7 +231,7 @@ async function generateQRCode(res = null, req) {
     const randomComponent = Math.floor(Math.random() * 1000);
     const timestamp = new Date().getTime();
     const cloudURL = `https://attendance-4au9.onrender.com/submit`;
-    const qrCodeData = `${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}`;
+        const qrCodeData = `${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}`;
 
     qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
       if (err) {
@@ -232,39 +243,32 @@ async function generateQRCode(res = null, req) {
       } else {
         console.log(`Generated QR code with data: ${qrCodeData}`);
         if (res) {
-          generateDeviceFingerprint(req)
-            .then(fingerprint => {
-              res.send(`
-                <!DOCTYPE html>
-                <html lang="en">
-                <head>
-                  <meta charset="UTF-8">
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                  <title>QR Code</title>
-                </head>
-                <body>
-                  <h1>Scan the QR code</h1>
-                  <img id="qrCodeImage" src="${qrCode}" alt="QR Code">
-                  <script>
-                    function fetchNewQRCode() {
-                      fetch('/new-qrcode')
-                        .then(response => response.json())
-                        .then(data => {
-                          document.getElementById('qrCodeImage').src = data.qrCodeData;
-                        })
-                        .catch(error => console.error('Error fetching new QR code:', error));
-                    }
-                    setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
-                    fetchNewQRCode(); // Initial fetch
-                  </script>
-                </body>
-                </html>
-              `);
-            })
-            .catch(error => {
-              console.error('Error generating fingerprint:', error);
-              res.status(500).send('Internal Server Error');
-            });
+          res.send(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>QR Code</title>
+            </head>
+            <body>
+              <h1>Scan the QR code</h1>
+              <img id="qrCodeImage" src="${qrCode}" alt="QR Code">
+              <script>
+                function fetchNewQRCode() {
+                  fetch('/new-qrcode')
+                    .then(response => response.json())
+                    .then(data => {
+                      document.getElementById('qrCodeImage').src = data.qrCodeData;
+                    })
+                    .catch(error => console.error('Error fetching new QR code:', error));
+                }
+                setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
+                fetchNewQRCode(); // Initial fetch
+              </script>
+            </body>
+            </html>
+          `);
         } else {
           resolve(qrCode);
         }
@@ -272,7 +276,6 @@ async function generateQRCode(res = null, req) {
     });
   });
 }
-
 
 // Update QR code counter and generate a new QR code every 30 seconds
 setInterval(() => {
@@ -285,3 +288,4 @@ setInterval(() => {
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+
