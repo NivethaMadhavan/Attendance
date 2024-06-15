@@ -7,6 +7,18 @@ const FingerprintJS = require('@fingerprintjs/fingerprintjs');
 const app = express();
 let port = parseInt(process.env.PORT, 10) || 10000; // Default to 10000 if PORT is not set or invalid
 
+// Ensure the port is within the valid range
+if (port < 0 || port > 65535) {
+  console.error(`Invalid port number: ${port}. Falling back to default port 10000.`);
+  port = 10000;
+}
+
+const localip = ip.address();
+let qrCodeCounter = 0;
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
 const connectionString = process.env.DB_URI_INTERNAL;
 
 const client = new Client({
@@ -16,11 +28,6 @@ const client = new Client({
 client.connect()
   .then(() => console.log('Connected to the database'))
   .catch(err => console.error('Error connecting to the database:', err));
-
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-
-let qrCodeCounter = 0;
 
 // Function to generate device fingerprint
 async function generateDeviceFingerprint(req) {
@@ -264,6 +271,14 @@ async function generateQRCode(res = null, req) {
     });
   });
 }
+
+
+// Update QR code counter and generate a new QR code every 30 seconds
+setInterval(() => {
+  qrCodeCounter++;
+  console.log(`QR code counter updated to: ${qrCodeCounter}`);
+  generateQRCode(); // Generate QR code without sending a response
+}, 30000);
 
 // Start the server
 app.listen(port, () => {
