@@ -3,6 +3,7 @@ const qr = require('qrcode');
 const ip = require('ip');
 const { Client } = require('pg');
 const bodyParser = require('body-parser');
+const useragent = require('express-useragent'); // Include express-useragent
 
 const app = express();
 let port = parseInt(process.env.PORT, 10) || 10000; // Default to 10000 if PORT is not set or invalid
@@ -18,6 +19,7 @@ let qrCodeCounter = 0;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(useragent.express()); // Middleware to parse user-agent headers
 
 const connectionString = process.env.DB_URI_INTERNAL;
 
@@ -170,65 +172,57 @@ app.get('/submit', async (req, res) => {
   console.log('qrCodeCounter:', qrCodeCounter);
 });
 
-function generateDeviceFingerprint() {
-  var fingerprint = {
-    userAgent: navigator.userAgent,
-    pluginsCount: navigator.plugins.length,
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    language: navigator.language
-    // Add more attributes as needed
-  };
-
-  // Convert to JSON and hash using a secure hashing algorithm
-  var fingerprintString = JSON.stringify(fingerprint);
-  var hashedFingerprint = md5(fingerprintString); // Example using md5 hash (use a secure hashing algorithm)
-
-  return hashedFingerprint;
-}
-
 // POST route handler for form submission
 app.post('/submit', (req, res) => {
+  console.log('Request body:', req.body); 
   try {
-    const requestedQrCode = parseInt(req.body.qrcode);
+    const requestedQrCode = parseInt(req.body.qrcode); // Retrieve from request body, not query
+    console.log(`Received submit request with qrcode: ${requestedQrCode}, current qrCodeCounter: ${qrCodeCounter}`);
+
     const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    const deviceFingerprint = generateDeviceFingerprint(); // Implement your device fingerprint generation function
+    const deviceFingerprint = generateDeviceFingerprint(req); // Generate device fingerprint
 
-    // Check if both IP address and device fingerprint are present in the database
-    const checkQuery = 'SELECT COUNT(*) AS count FROM "FormSubmissions" WHERE ip_address = $1 OR device_fingerprint = $2';
-    client.query(checkQuery, [clientIp, deviceFingerprint], (checkError, checkResults) => {
-      if (checkError) {
-        console.error('Error checking IP address and device fingerprint:', checkError);
-        res.status(500).send('Internal Server Error');
-        return;
-      }
-      const count = checkResults.rows[0].count;
-      if (count > 0) {
-        // IP address or device fingerprint already submitted
-        console.log('Form submission rejected: IP address or device fingerprint already submitted');
-        res.send('Form submission rejected: IP address or device fingerprint already submitted');
-      } else {
-        // Extract form data from the request
-        const { name, usn } = req.body;
+    if (qrCodeCounter === requestedQrCode) {
+      // Check if both IP address and device fingerprint are already in the table
+      const checkQuery = 'SELECT COUNT(*) AS count FROM "FormSubmissions" WHERE ip_address = $1 OR device_fingerprint = $2';
+      client.query(checkQuery, [clientIp, deviceFingerprint], (checkError, checkResults) => {
+        if (checkError) {
+          console.error('Error checking IP address and device fingerprint:', checkError);
+          res.status(500).send('Internal Server Error');
+          return;
+        }
+        const count = checkResults.rows[0].count;
+        if (count > 0) {
+          // IP address or device fingerprint already submitted
+          console.log('Form submission rejected: IP address or device fingerprint already submitted');
+          res.send('Form submission rejected: IP address or device fingerprint already submitted');
+        } else {
+          // Extract form data from the request
+          const { name, usn } = req.body;
 
-        // Insert the form data into the database with IP address and device fingerprint
-        const insertQuery = 'INSERT INTO "FormSubmissions" (name, usn, ip_address, device_fingerprint) VALUES ($1, $2, $3, $4)';
-        client.query(insertQuery, [name, usn, clientIp, deviceFingerprint], (insertError, insertResults) => {
-          if (insertError) {
-            console.error('Error inserting form data:', insertError);
-            res.status(500).send('Internal Server Error');
-          } else {
-            console.log('Form data inserted successfully');
-            res.send('Form submitted successfully');
-          }
-        });
-      }
-    });
+          // Insert the form data into the database
+          const insertQuery = 'INSERT INTO "FormSubmissions" (name, usn, ip_address, device_fingerprint) VALUES ($1, $2, $3, $4)';
+          client.query(insertQuery, [name, usn, clientIp, deviceFingerprint], (insertError, insertResults) => {
+            if (insertError) {
+              console.error('Error inserting form data:', insertError);
+              res.status(500).send('Internal Server Error');
+            } else {
+              console.log('Form data inserted successfully');
+              res.send('Form submitted successfully');
+            }
+          });
+        }
+      });
+    } else {
+      // QR code doesn't match
+      console.log('Form submission rejected: QR code mismatch');
+      res.send('Form submission rejected: QR code mismatch');
+    }
   } catch (error) {
     console.error('Error processing form submission:', error);
     res.status(500).send('Internal Server Error');
   }
 });
-
 
 // Function to generate the QR code
 async function generateQRCode(res = null) {
@@ -287,6 +281,13 @@ setInterval(() => {
   console.log(`QR code counter updated to: ${qrCodeCounter}`);
   generateQRCode(); // Generate QR code without sending a response
 }, 30000);
+
+// Function to generate device fingerprint
+function generateDeviceFingerprint(req) {
+  const ua = req.useragent;
+  const fingerprint = `${ua.browser},${ua.os},${ua.platform},${ua.source},${ua.isMobile},${ua.isDesktop},${ua.isBot}`;
+  return fingerprint;
+}
 
 // Start the server
 app.listen(port, '0.0.0.0', () => {
