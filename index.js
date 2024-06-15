@@ -240,52 +240,48 @@ async function generateQRCode(res = null) {
         console.error('Error generating QR code:', err);
         if (res) {
           res.status(500).send('Internal Server Error');
+          if (res) {
+            res.send(`
+              <!DOCTYPE html>
+              <html lang="en">
+              <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>QR Code</title>
+              </head>
+              <body>
+                <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column;">
+                  <h1>Attendance QR Code</h1>
+                  <img id="qrCodeImage" src="${qrCode}" alt="QR Code">
+                  <p>Scan this QR code to proceed with attendance.</p>
+                </div>
+                <script>
+                  function fetchNewQRCode() {
+                    fetch('/new-qrcode')
+                      .then(response => response.json())
+                      .then(data => {
+                        document.getElementById('qrCodeImage').src = data.qrCodeData;
+                      })
+                      .catch(error => console.error('Error fetching new QR code:', error));
+                  }
+                  setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
+                </script>
+              </body>
+              </html>
+            `);
+          } else {
+            resolve(qrCode);
+          }
+          qrCodeCounter++;
         }
-        reject(err);
-      } else {
-        console.log(`Generated QR code with data: ${qrCodeData}`);
-        if (res) {
-          res.send(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>QR Code</title>
-            </head>
-            <body>
-              <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column;">
-                <h1>Attendance QR Code</h1>
-                <img id="qrCodeImage" src="${qrCode}" alt="QR Code">
-                <p>Scan this QR code to proceed with attendance.</p>
-              </div>
-              <script>
-                function fetchNewQRCode() {
-                  fetch('/new-qrcode')
-                    .then(response => response.json())
-                    .then(data => {
-                      document.getElementById('qrCodeImage').src = data.qrCodeData;
-                    })
-                    .catch(error => console.error('Error fetching new QR code:', error));
-                }
-                setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
-              </script>
-            </body>
-            </html>
-          `);
-        } else {
-          resolve(qrCode);
-        }
-        qrCodeCounter++;
-      }
+      });
     });
   });
 }
 
 // Update QR code counter and generate a new QR code every 30 seconds
 setInterval(() => {
-  qrCodeCounter++;
-  console.log(`QR code counter updated to: ${qrCodeCounter}`);
+  console.log(`Updating QR code counter to: ${qrCodeCounter}`);
   generateQRCode(); // Generate QR code without sending a response
 }, 30000);
 
