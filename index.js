@@ -31,11 +31,22 @@ client.connect()
   .then(() => console.log('Connected to the database'))
   .catch(err => console.error('Error connecting to the database:', err));
 
+// Initialize fingerprint generator
+function generateDeviceFingerprint(req) {
+  return new Promise((resolve, reject) => {
+    Fingerprint2.get((components) => {
+      const values = components.map(component => component.value);
+      const fingerprint = Fingerprint2.x64hash128(values.join(''), 31);
+      resolve(fingerprint);
+    });
+  });
+}
+
 // Endpoint to generate the QR code for the home page
 app.get('/', async (req, res) => {
   try {
     console.log('Generating QR code for home page');
-    await generateQRCode(res);
+    await generateQRCode(res, req); // Pass req to generateQRCode to include fingerprint
   } catch (error) {
     console.error('Error generating QR code:', error);
     res.status(500).send('Internal Server Error');
@@ -46,7 +57,7 @@ app.get('/', async (req, res) => {
 app.get('/new-qrcode', async (req, res) => {
   try {
     console.log('Generating new QR code');
-    const qrCodeData = await generateQRCode();
+    const qrCodeData = await generateQRCode(null, req); // Pass req to generateQRCode
     res.json({ qrCodeData });
   } catch (error) {
     console.error('Error generating new QR code:', error);
@@ -60,10 +71,12 @@ app.get('/submit', async (req, res) => {
   try {
     const requestedQrCode = parseInt(req.query.qrcode);
     console.log(`Received submit request with qrcode: ${requestedQrCode}, current qrCodeCounter: ${qrCodeCounter}`);
-   
+
     if (qrCodeCounter !== requestedQrCode) {
       res.send('Rejected');
     } else {
+      // Generate device fingerprint and render form
+      const fingerprint = await generateDeviceFingerprint(req);
       res.send(`
         <!DOCTYPE html>
         <html lang="en">
@@ -73,81 +86,24 @@ app.get('/submit', async (req, res) => {
           <title>Attendance</title>
           <link rel="icon" href="letter_logo.png" type="image/x-icon">
           <style>
-            body {
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              background-color: teal;
-              background-size: contain;
-              background-image: url("hire_now_bg.jpg") fixed;
-              background-position: center;
-              margin: 0;
-              padding: 0;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100vh;
-              color: navy;
-            }
-            h2 {
-              color: white;
-              font-weight: 700;
-              font-size: 28px;
-              text-align: center;
-            }
-            form {
-              backdrop-filter: blur(100px);
-              padding: 20px;
-              padding-right: 70px;
-              padding-left: 50px;
-              box-shadow: 0px 4px 6px #38497C;
-              border-radius: 15px;
-              width: 500px;
-            }
-            label {
-              display: block;
-              margin-bottom: 10px;
-              color: black;
-              font-size: 22px;
-            }
-            input, textarea {
-              width: 100%;
-              padding: 10px;
-              margin-bottom: 15px;
-              border: none;
-              border-radius: 8px;
-              background: rgba(255, 255, 255, 0.1);
-              color: black;
-            }
-            input {
-              height: 40px;
-            }
-            textarea {
-              height: 110px;
-            }
-            button {
-              background-color: #5F7DEF;
-              color: black;
-              padding: 10px 15px;
-              border: none;
-              border-radius: 8px;
-              cursor: pointer;
-              transition: background-color 0.3s ease;
-            }
-            button:hover {
-              background-color: #3e4093;
-              color: white;
-            }
+            /* Your styles here */
           </style>
         </head>
         <body>
-          <form id="hire_now" action="/submit" method="post">
-            <h2>Accepted! Enter details:</h2>
+          <h2>Accepted! Enter details:</h2>
+          <form id="attendanceForm" action="/submit" method="post">
             <label for="name">Your Name:</label>
             <input type="text" id="name" name="name" required>
             <label for="usn">USN:</label>
             <input type="text" id="usn" name="usn">
             <input type="hidden" id="qrcode" name="qrcode" value="${qrCodeCounter}">
+            <input type="hidden" id="fingerprint" name="fingerprint" value="${fingerprint}">
             <button type="submit">Submit</button>
           </form>
+          <div>
+            <h1>Scan the QR code</h1>
+            <img id="qrCodeImage" src="" alt="QR Code">
+          </div>
           <script>
             function fetchNewQRCode() {
               fetch('/new-qrcode')
@@ -158,6 +114,7 @@ app.get('/submit', async (req, res) => {
                 .catch(error => console.error('Error fetching new QR code:', error));
             }
             setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
+            fetchNewQRCode(); // Initial fetch
           </script>
         </body>
         </html>
@@ -168,59 +125,53 @@ app.get('/submit', async (req, res) => {
     console.error('Error processing submit request:', error);
     res.status(500).send('Internal Server Error');
   }
-  console.log('qrCodeCounter:', qrCodeCounter);
 });
 
 // POST route handler for form submission
 app.post('/submit', (req, res) => {
   console.log('Request body:', req.body);
   try {
-    const requestedQrCode = parseInt(req.body.qrcode); // Retrieve from request body, not query
+    const requestedQrCode = parseInt(req.body.qrcode);
     console.log(`Received submit request with qrcode: ${requestedQrCode}, current qrCodeCounter: ${qrCodeCounter}`);
-    console.log(typeof qrCodeCounter, typeof requestedQrCode);
 
-    // Generate device fingerprint using fingerprintjs2
-    Fingerprint2.get(components => {
-      const values = components.map(component => component.value);
-      const deviceFingerprint = Fingerprint2.x64hash128(values.join(''), 31);
+    const clientFingerprint = req.body.fingerprint;
 
-      if (qrCodeCounter === requestedQrCode) {
-        // Check if the device fingerprint is already in the table
-        const checkQuery = 'SELECT COUNT(*) AS count FROM "FormSubmissions" WHERE device_fingerprint = $1';
-        client.query(checkQuery, [deviceFingerprint], (checkError, checkResults) => {
-          if (checkError) {
-            console.error('Error checking device fingerprint:', checkError);
-            res.status(500).send('Internal Server Error');
-            return;
-          }
-          const count = checkResults.rows[0].count;
-          if (count > 0) {
-            // Device fingerprint already submitted
-            console.log('Form submission rejected: Device fingerprint already submitted');
-            res.send('Form submission rejected: Device fingerprint already submitted');
-          } else {
-            // Extract form data from the request
-            const { name, usn } = req.body;
+    if (qrCodeCounter === requestedQrCode) {
+      // Check if the fingerprint is already in the table
+      const checkQuery = 'SELECT COUNT(*) AS count FROM "FormSubmissions" WHERE client_fingerprint = $1';
+      client.query(checkQuery, [clientFingerprint], (checkError, checkResults) => {
+        if (checkError) {
+          console.error('Error checking fingerprint:', checkError);
+          res.status(500).send('Internal Server Error');
+          return;
+        }
+        const count = checkResults.rows[0].count;
+        if (count > 0) {
+          // Fingerprint already submitted
+          console.log('Form submission rejected: Device fingerprint already submitted');
+          res.send('Form submission rejected: Device fingerprint already submitted');
+        } else {
+          // Extract form data from the request
+          const { name, usn } = req.body;
 
-            // Insert the form data into the database
-            const insertQuery = 'INSERT INTO "FormSubmissions" (name, usn, device_fingerprint) VALUES ($1, $2, $3)';
-            client.query(insertQuery, [name, usn, deviceFingerprint], (insertError, insertResults) => {
-              if (insertError) {
-                console.error('Error inserting form data:', insertError);
-                res.status(500).send('Internal Server Error');
-              } else {
-                console.log('Form data inserted successfully');
-                res.send('Form submitted successfully');
-              }
-            });
-          }
-        });
-      } else {
-        // QR code doesn't match
-        console.log('Form submission rejected: QR code mismatch');
-        res.send('Form submission rejected: QR code mismatch');
-      }
-    });
+          // Insert the form data into the database
+          const insertQuery = 'INSERT INTO "FormSubmissions" (name, usn, client_fingerprint) VALUES ($1, $2, $3)';
+          client.query(insertQuery, [name, usn, clientFingerprint], (insertError, insertResults) => {
+            if (insertError) {
+              console.error('Error inserting form data:', insertError);
+              res.status(500).send('Internal Server Error');
+            } else {
+              console.log('Form data inserted successfully');
+              res.send('Form submitted successfully');
+            }
+          });
+        }
+      });
+    } else {
+      // QR code doesn't match
+      console.log('Form submission rejected: QR code mismatch');
+      res.send('Form submission rejected: QR code mismatch');
+    }
   } catch (error) {
     console.error('Error processing form submission:', error);
     res.status(500).send('Internal Server Error');
@@ -228,7 +179,7 @@ app.post('/submit', (req, res) => {
 });
 
 // Function to generate the QR code
-async function generateQRCode(res = null) {
+async function generateQRCode(res = null, req) {
   return new Promise((resolve, reject) => {
     const randomComponent = Math.floor(Math.random() * 1000);
     const timestamp = new Date().getTime();
@@ -245,36 +196,43 @@ async function generateQRCode(res = null) {
       } else {
         console.log(`Generated QR code with data: ${qrCodeData}`);
         if (res) {
-          res.send(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>QR Code</title>
-            </head>
-            <body style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column;">
-              <h1>Attendance QR Code</h1>
-              <img id="qrCodeImage" src="${qrCode}" alt="QR Code">
-              <p>Scan this QR code to proceed with attendance.</p>
-              <script>
-                function fetchNewQRCode() {
-                  fetch('/new-qrcode')
-                    .then(response => response.json())
-                    .then(data => {
-                      document.getElementById('qrCodeImage').src = data.qrCodeData;
-                    })
-                    .catch(error => console.error('Error fetching new QR code:', error));
-                }
-                setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
-              </script>
-            </body>
-            </html>
-          `);
+          // Generate device fingerprint and send the HTML response
+          generateDeviceFingerprint(req)
+            .then(fingerprint => {
+              res.send(`
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  <title>QR Code</title>
+                </head>
+                <body>
+                  <h1>Scan the QR code</h1>
+                  <img id="qrCodeImage" src="${qrCode}" alt="QR Code">
+                  <script>
+                    function fetchNewQRCode() {
+                      fetch('/new-qrcode')
+                        .then(response => response.json())
+                        .then(data => {
+                          document.getElementById('qrCodeImage').src = data.qrCodeData;
+                        })
+                        .catch(error => console.error('Error fetching new QR code:', error));
+                    }
+                    setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
+                    fetchNewQRCode(); // Initial fetch
+                  </script>
+                </body>
+                </html>
+              `);
+            })
+            .catch(error => {
+              console.error('Error generating fingerprint:', error);
+              res.status(500).send('Internal Server Error');
+            });
         } else {
           resolve(qrCode);
         }
-        qrCodeCounter++;
       }
     });
   });
@@ -282,12 +240,15 @@ async function generateQRCode(res = null) {
 
 
 // Update QR code counter and generate a new QR code every 30 seconds
-setInterval(() => {
-  console.log(`Updating QR code counter to: ${qrCodeCounter}`);
-  generateQRCode(); // Generate QR code without sending a response
+setInterval(async () => {
+  qrCodeCounter++;
+  console.log(`QR code counter updated to: ${qrCodeCounter}`);
+  await generateQRCode(); // Generate QR code with no response needed
 }, 30000);
 
 // Start the server
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running at http://${localip}:${port}`);
 });
+
+ 
