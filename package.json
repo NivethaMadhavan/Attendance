@@ -10,8 +10,8 @@
     "express-useragent": "^1.0.15",
     "qrcode": "^1.5.0",
     "ip": "^1.1.5",
-    "pg": "^8.7.1", 
+    "pg": "^8.7.1",
     "body-parser": "^1.19.0",
-    "fingerprintjs2": "^2.1.0"
+    "@fingerprintjs/fingerprintjs": "^3.3.4"
   }
 }
