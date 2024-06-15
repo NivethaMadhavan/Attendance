@@ -3,6 +3,7 @@ const qr = require('qrcode');
 const bodyParser = require('body-parser');
 const { Client } = require('pg');
 const FingerprintJS = require('@fingerprintjs/fingerprintjs');
+const ip = require('ip');
 
 const app = express();
 let port = parseInt(process.env.PORT, 10) || 10000; // Default to 10000 if PORT is not set or invalid
