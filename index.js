@@ -257,6 +257,7 @@ async function getDeviceFingerprint(req) {
       resolve(fingerprint);
     });
   });
+}
 
 // Function to check if fingerprint already exists in database
 async function checkExistingFingerprint(fingerprint) {
