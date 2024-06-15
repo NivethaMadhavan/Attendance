@@ -134,12 +134,12 @@ app.post('/submit', (req, res) => {
     const requestedQrCode = parseInt(req.body.qrcode);
     console.log(`Received submit request with qrcode: ${requestedQrCode}, current qrCodeCounter: ${qrCodeCounter}`);
 
-    const clientFingerprint = req.body.fingerprint;
+    const deviceFingerprint = req.body.fingerprint;
 
     if (qrCodeCounter === requestedQrCode) {
       // Check if the fingerprint is already in the table
-      const checkQuery = 'SELECT COUNT(*) AS count FROM "FormSubmissions" WHERE client_fingerprint = $1';
-      client.query(checkQuery, [clientFingerprint], (checkError, checkResults) => {
+      const checkQuery = 'SELECT COUNT(*) AS count FROM "FormSubmissions" WHERE device_fingerprint = $1';
+      client.query(checkQuery, [deviceFingerprint], (checkError, checkResults) => {
         if (checkError) {
           console.error('Error checking fingerprint:', checkError);
           res.status(500).send('Internal Server Error');
@@ -155,8 +155,8 @@ app.post('/submit', (req, res) => {
           const { name, usn } = req.body;
 
           // Insert the form data into the database
-          const insertQuery = 'INSERT INTO "FormSubmissions" (name, usn, client_fingerprint) VALUES ($1, $2, $3)';
-          client.query(insertQuery, [name, usn, clientFingerprint], (insertError, insertResults) => {
+          const insertQuery = 'INSERT INTO "FormSubmissions" (name, usn, device_fingerprint) VALUES ($1, $2, $3)';
+          client.query(insertQuery, [name, usn, deviceFingerprint], (insertError, insertResults) => {
             if (insertError) {
               console.error('Error inserting form data:', insertError);
               res.status(500).send('Internal Server Error');
