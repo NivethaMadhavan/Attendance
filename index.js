@@ -24,7 +24,7 @@ const connectionString = process.env.DB_URI_INTERNAL;
 
 // PostgreSQL database connection setup
 const client = new Client({
-  connectionString: process.env.DB_URI_INTERNAL
+  connectionString: connectionString
 });
 
 client.connect()
@@ -179,10 +179,11 @@ app.post('/submit', (req, res) => {
     console.log(`Received submit request with qrcode: ${requestedQrCode}, current qrCodeCounter: ${qrCodeCounter}`);
     console.log(typeof qrCodeCounter, typeof requestedQrCode);
 
-    // Generate device fingerprint
-    new Fingerprint2().get((result) => {
-      const deviceFingerprint = result;
-      
+    // Generate device fingerprint using fingerprintjs2
+    Fingerprint2.get(components => {
+      const values = components.map(component => component.value);
+      const deviceFingerprint = Fingerprint2.x64hash128(values.join(''), 31);
+
       if (qrCodeCounter === requestedQrCode) {
         // Check if the device fingerprint is already in the table
         const checkQuery = 'SELECT COUNT(*) AS count FROM "FormSubmissions" WHERE device_fingerprint = $1';
@@ -227,7 +228,6 @@ app.post('/submit', (req, res) => {
 });
 
 // Function to generate the QR code
-// Function to generate the QR code
 async function generateQRCode(res = null) {
   return new Promise((resolve, reject) => {
     const randomComponent = Math.floor(Math.random() * 1000);
@@ -251,42 +251,27 @@ async function generateQRCode(res = null) {
             <head>
               <meta charset="UTF-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>QR Code</title>
+              <title>Attendance QR Code</title>
             </head>
             <body>
-              <h1>Scan the QR code</h1>
-              <img id="qrCodeImage" src="${qrCode}" alt="QR Code">
-              <script>
-                function fetchNewQRCode() {
-                  fetch('/new-qrcode')
-                    .then(response => response.json())
-                    .then(data => {
-                      document.getElementById('qrCodeImage').src = data.qrCodeData;
-                    })
-                    .catch(error => console.error('Error fetching new QR code:', error));
-                }
-                setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
-              </script>
+              <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column;">
+                <h1>Attendance QR Code</h1>
+                <img id="qrCodeImage" src="${qrCode}" alt="QR Code">
+                <p>Scan this QR code to proceed with attendance.</p>
+              </div>
             </body>
             </html>
           `);
         } else {
           resolve(qrCode);
         }
+        qrCodeCounter++;
       }
     });
   });
 }
 
-// Update QR code counter and generate a new QR code every 30 seconds
-setInterval(() => {
-  qrCodeCounter++;
-  console.log(`QR code counter updated to: ${qrCodeCounter}`);
-  generateQRCode(); // Generate QR code without sending a response
-}, 30000);
-
 // Start the server
-app.listen(port, '0.0.0.0', () => {
+app.listen(port, () => {
   console.log(`Server is running at http://${localip}:${port}`);
 });
-
