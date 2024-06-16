@@ -284,7 +284,7 @@ app.post('/submit', (req, res) => {
 function generateQRCodePeriodically() {
   setInterval(async () => {
     try {
-      console.log('Generating new QR code periodically');
+      console.log('Generating new QR code periodically',qrCodeCounter);
       await generateQRCode();
       qrCodeCounter++;
     } catch (error) {
