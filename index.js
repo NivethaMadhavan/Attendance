@@ -282,15 +282,11 @@ app.post('/submit', (req, res) => {
 
 // Function to periodically generate new QR code
 function generateQRCodePeriodically() {
-  setInterval(async () => {
-    try {
-      console.log('Generating new QR code periodically',qrCodeCounter);
-      await generateQRCode();
-      qrCodeCounter++;
-    } catch (error) {
-      console.error('Error generating QR code periodically:', error);
-    }
-  }, 30000); // Generate a new QR code every 30 seconds
+ setInterval(() => {
+  qrCodeCounter++;
+  console.log(`QR code counter updated to: ${qrCodeCounter}`);
+  generateQRCode(); // Generate QR code without sending a response
+}, 30000);// Generate a new QR code every 30 seconds
 }
 
 // Start the periodic QR code generation
