@@ -20,6 +20,7 @@ app.use(bodyParser.json());
 app.get('/', async (req, res) => {
   try {
     res.send('Hello, World! The server is running.');
+    console.log('Hello World');
   } catch (error) {
     console.error('Error:', error);
     res.status(500).send('Internal Server Error');
