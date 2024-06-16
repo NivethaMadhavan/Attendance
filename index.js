@@ -27,6 +27,7 @@ app.get('/', async (req, res) => {
   }
 });
 
-app.listen(port, localip, () => {
-  console.log(`Server is running on http://${localip}:${port}`);
+// Listen on 0.0.0.0 to accept connections on all network interfaces
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server is running on http://0.0.0.0:${port}`);
 });
