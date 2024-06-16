@@ -86,7 +86,6 @@ app.get('/', async (req, res) => {
   try {
     console.log('Generating QR code for home page');
     await generateQRCode(res, req);
-    qrCodeCounter++;
   } catch (error) {
     console.error('Error generating QR code:', error);
     res.status(500).send('Internal Server Error');
@@ -98,7 +97,6 @@ app.get('/new-qrcode', async (req, res) => {
   try {
     console.log('Generating new QR code');
     const qrCodeData = await generateQRCode(null, req);
-    qrCodeCounter++;
     res.json({ qrCodeData });
   } catch (error) {
     console.error('Error generating new QR code:', error);
