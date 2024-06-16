@@ -247,7 +247,6 @@ app.post('/submit', (req, res) => {
         const count = checkResults.rows[0].count;
         if (count > 0) {
           // Fingerprint already submitted
-                    // Fingerprint already submitted
           console.log('Form submission rejected: Fingerprint already submitted');
           res.send('Form submission rejected: Fingerprint already submitted');
         } else {
@@ -280,11 +279,11 @@ app.post('/submit', (req, res) => {
 
 // Function to periodically generate new QR code
 function generateQRCodePeriodically() {
- setInterval(() => {
-  qrCodeCounter++;
-  console.log(`QR code counter updated to: ${qrCodeCounter}`);
-  generateQRCode(); // Generate QR code without sending a response
-}, 30000);// Generate a new QR code every 30 seconds
+  setInterval(() => {
+    qrCodeCounter++;
+    console.log(`QR code counter updated to: ${qrCodeCounter}`);
+    generateQRCode(); // Generate QR code without sending a response
+  }, 30000); // Generate a new QR code every 30 seconds
 }
 
 // Start the periodic QR code generation
