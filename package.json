@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start-teacher": "node teacher.js",
+    "start-index": "node index.js",
+    "start": "node teacher.js"
   },
   "dependencies": {
     "express": "^4.17.1",
