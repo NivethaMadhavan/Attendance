@@ -93,7 +93,7 @@ app.get('/submit', async (req, res) => {
   console.log('Start: qrCodeCounter:', qrCodeCounter);
   try {
     const requestedQrCode = parseInt(req.query.qrcode);
-    console.log(Received submit request with qrcode: ${requestedQrCode}, current qrCodeCounter: ${qrCodeCounter});
+    console.log('Received submit request with qrcode: ${requestedQrCode}, current qrCodeCounter: ${qrCodeCounter}');
 
     if (qrCodeCounter !== requestedQrCode) {
       res.send('Rejected');
