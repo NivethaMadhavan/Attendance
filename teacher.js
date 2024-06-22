@@ -39,6 +39,7 @@ async function generateQRCode(sessionData) {
   });
 }
 
+// Route for the Teacher Dashboard
 app.get('/teacher-dashboard', (req, res) => {
   res.send(`
     <!DOCTYPE html>
@@ -101,6 +102,7 @@ app.get('/teacher-dashboard', (req, res) => {
         <div class="btn-container">
           <button class="btn" onclick="generateQRCode('ClassA')">Generate QR for Class A</button>
           <button class="btn" onclick="generateQRCode('ClassB')">Generate QR for Class B</button>
+          <a href="http://${localip}:${qrPort}/" class="btn" target="_blank">QR Generation</a>
         </div>
         <div class="qr-code" id="qrCodeContainer">
           <!-- QR code will be inserted here -->
@@ -130,23 +132,7 @@ app.get('/teacher-dashboard', (req, res) => {
   `);
 });
 
-app.post('/generate-qr', async (req, res) => {
-  try {
-    const { className } = req.body;
-    const sessionData = {
-      qrCodeCounter: Math.floor(Math.random() * 10000), // This should be replaced with a proper counter logic
-      className: className,
-      date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
-      time: new Date().toTimeString().split(' ')[0] // HH:MM:SS
-    };
-    const qrCode = await generateQRCode(sessionData);
-    res.json({ qrCode: qrCode });
-  } catch (error) {
-    console.error('Error generating QR code:', error);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
+// Start the server
 app.listen(port, () => {
   console.log(`Teacher service is running on http://${localip}:${port}`);
 });
