@@ -1,9 +1,9 @@
 {
 "name": "attendance-app",
 "version": "1.0.0",
-"main": "index.js",
+"main": "home.js",
 "scripts": {
-"start": "node index.js"
+"start": "node home.js"
 },
 "dependencies": {
 "express": "^4.17.1",
