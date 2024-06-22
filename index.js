@@ -175,7 +175,7 @@ async function generateQRCode(res = null, req) {
   return new Promise((resolve, reject) => {
     const randomComponent = Math.floor(Math.random() * 1000);
     const timestamp = new Date().getTime();
-    const cloudURL = https://ahttps://attendance-4au9.onrender.com/submit; // Replace with your cloud URL
+    const cloudURL = https://attendance-4au9.onrender.com/submit; // Replace with your cloud URL
     const qrCodeData = ${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent};
 
     qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
@@ -186,12 +186,12 @@ async function generateQRCode(res = null, req) {
         }
         reject(err);
       } else {
-        console.log(Generated QR code with data: ${qrCodeData});
+        console.log('Generated QR code with data: ${qrCodeData}');
         if (res) {
           // Generate device fingerprint and send the HTML response
           generateDeviceFingerprint(req)
             .then(fingerprint => {
-              res.send(
+              res.send(`
                 <!DOCTYPE html>
                 <html lang="en">
                 <head>
@@ -215,7 +215,7 @@ async function generateQRCode(res = null, req) {
                     fetchNewQRCode(); // Initial fetch
                   </script>
                 </body>
-                </html>
+                </html>`
               );
             })
             .catch(error => {
@@ -233,7 +233,7 @@ async function generateQRCode(res = null, req) {
 function generateQRCodePeriodically() {
   setInterval(() => {
     qrCodeCounter++;
-    console.log(QR code counter updated to: ${qrCodeCounter});
+    console.log('QR code counter updated to: ${qrCodeCounter}');
     generateQRCode(); // Generate QR code without sending a response
   }, 30000); // Generate a new QR code every 30 seconds
 }
@@ -243,6 +243,6 @@ generateQRCodePeriodically();
 
 // Start the server
 app.listen(port, () => {
-  console.log(Server is running at http://${localip}:${port});
+  console.log('Server is running at http://${localip}:${port}');
 });
 
