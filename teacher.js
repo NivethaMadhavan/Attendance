@@ -39,4 +39,61 @@ async function generateQRCode(sessionData) {
   });
 }
 
-app.get('/teacher-dashboard', (req, res)
+app.get('/teacher-dashboard', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Teacher Dashboard</title>
+    </head>
+    <body>
+      <h1>Teacher Dashboard</h1>
+      <div>
+        <button onclick="generateQRCode('ClassA')">Generate QR for Class A</button>
+        <button onclick="generateQRCode('ClassB')">Generate QR for Class B</button>
+      </div>
+      <script>
+        function generateQRCode(className) {
+          fetch('/generate-qr', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ className: className })
+          })
+          .then(response => response.json())
+          .then(data => {
+            const img = document.createElement('img');
+            img.src = data.qrCode;
+            document.body.appendChild(img);
+          })
+          .catch(error => console.error('Error generating QR code:', error));
+        }
+      </script>
+    </body>
+    </html>
+  `);
+});
+
+app.post('/generate-qr', async (req, res) => {
+  try {
+    const { className } = req.body;
+    const sessionData = {
+      qrCodeCounter: Math.floor(Math.random() * 10000), // This should be replaced with a proper counter logic
+      className: className,
+      date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+      time: new Date().toTimeString().split(' ')[0] // HH:MM:SS
+    };
+    const qrCode = await generateQRCode(sessionData);
+    res.json({ qrCode: qrCode });
+  } catch (error) {
+    console.error('Error generating QR code:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Teacher service is running on http://${localip}:${port}`);
+});
