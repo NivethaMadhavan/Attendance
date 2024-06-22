@@ -8,7 +8,7 @@ const app = express();
 const port = process.env.PORT || 3000; // Define your desired port
 
 // Initialize PostgreSQL client
-const connectionString = process.env.DATABASE_URL; // Replace with your actual PostgreSQL database URL
+const connectionString = process.env.DATABASE_URI_INTERNAL; // Replace with your actual PostgreSQL database URL
 const client = new Client({
   connectionString: connectionString,
 });
