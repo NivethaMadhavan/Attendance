@@ -176,7 +176,7 @@ async function generateQRCode(res = null, req) {
     const randomComponent = Math.floor(Math.random() * 1000);
     const timestamp = new Date().getTime();
     const cloudURL = 'https://attendance-4au9.onrender.com/submit'; // Replace with your cloud URL
-    const qrCodeData = ${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent};
+    const qrCodeData = `${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}`;
 
     qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
       if (err) {
@@ -186,7 +186,7 @@ async function generateQRCode(res = null, req) {
         }
         reject(err);
       } else {
-        console.log('Generated QR code with data: ${qrCodeData}');
+        console.log(`Generated QR code with data: ${qrCodeData}`);
         if (res) {
           // Generate device fingerprint and send the HTML response
           generateDeviceFingerprint(req)
@@ -215,8 +215,8 @@ async function generateQRCode(res = null, req) {
                     fetchNewQRCode(); // Initial fetch
                   </script>
                 </body>
-                </html>`
-              );
+                </html>
+              `);
             })
             .catch(error => {
               console.error('Error generating fingerprint:', error);
@@ -229,6 +229,7 @@ async function generateQRCode(res = null, req) {
     });
   });
 }
+
 // Function to periodically generate new QR code
 function generateQRCodePeriodically() {
   setInterval(() => {
