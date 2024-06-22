@@ -100,7 +100,7 @@ app.get('/submit', async (req, res) => {
     } else {
       // Generate device fingerprint and render form
       const fingerprint = await generateDeviceFingerprint(req);
-      res.send('
+      res.send(`
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -136,7 +136,7 @@ app.get('/submit', async (req, res) => {
             fetchNewQRCode(); // Initial fetch
           </script>
         </body>
-        </html>'
+        </html>`
       );
       console.log('End: qrCodeCounter:', qrCodeCounter);
     }
