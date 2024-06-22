@@ -11,7 +11,7 @@ let port = parseInt(process.env.PORT, 10) || 10000; // Default to 10000 if PORT 
 
 // Ensure the port is within the valid range
 if (port < 0 || port > 65535) {
-  console.error(Invalid port number: ${port}. Falling back to default port 10000.);
+  console.error(`Invalid port number: ${port}. Falling back to default port 10000.`);
   port = 10000;
 }
 
