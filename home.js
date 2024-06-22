@@ -71,6 +71,6 @@ app.get('/teacher-dashboard', (req, res) => {
 
 // Start the server
 const port = 3000; // Choose a port for the home page
-app.listen(port, () => {
-  console.log(`Home page is running at http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(Server is running at http://0.0.0.0:${port});
 });
