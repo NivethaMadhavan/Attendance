@@ -11,7 +11,7 @@ let port = parseInt(process.env.PORT, 10) || 10000; // Default to 10000 if PORT 
 
 // Ensure the port is within the valid range
 if (port < 0 || port > 65535) {
-  console.error(`Invalid port number: ${port}. Falling back to default port 10000.`);
+  console.error(Invalid port number: ${port}. Falling back to default port 10000.);
   port = 10000;
 }
 
@@ -93,14 +93,14 @@ app.get('/submit', async (req, res) => {
   console.log('Start: qrCodeCounter:', qrCodeCounter);
   try {
     const requestedQrCode = parseInt(req.query.qrcode);
-    console.log(`Received submit request with qrcode: ${requestedQrCode}, current qrCodeCounter: ${qrCodeCounter}`);
+    console.log(Received submit request with qrcode: ${requestedQrCode}, current qrCodeCounter: ${qrCodeCounter});
 
     if (qrCodeCounter !== requestedQrCode) {
       res.send('Rejected');
     } else {
       // Generate device fingerprint and render form
       const fingerprint = await generateDeviceFingerprint(req);
-      res.send(`
+      res.send(
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -137,7 +137,7 @@ app.get('/submit', async (req, res) => {
           </script>
         </body>
         </html>
-      `);
+      );
       console.log('End: qrCodeCounter:', qrCodeCounter);
     }
   } catch (error) {
@@ -175,8 +175,8 @@ async function generateQRCode(res = null, req) {
   return new Promise((resolve, reject) => {
     const randomComponent = Math.floor(Math.random() * 1000);
     const timestamp = new Date().getTime();
-    const cloudURL = `https://attendance-4au9.onrender.com/submit`; // Replace with your cloud URL
-    const qrCodeData = `${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}`;
+    const cloudURL = https://attendance-4au9.onrender.com/submit; // Replace with your cloud URL
+    const qrCodeData = ${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent};
 
     qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
       if (err) {
@@ -186,12 +186,12 @@ async function generateQRCode(res = null, req) {
         }
         reject(err);
       } else {
-        console.log(`Generated QR code with data: ${qrCodeData}`);
+        console.log(Generated QR code with data: ${qrCodeData});
         if (res) {
           // Generate device fingerprint and send the HTML response
           generateDeviceFingerprint(req)
             .then(fingerprint => {
-              res.send(`
+              res.send(
                 <!DOCTYPE html>
                 <html lang="en">
                 <head>
@@ -216,7 +216,7 @@ async function generateQRCode(res = null, req) {
                   </script>
                 </body>
                 </html>
-              `);
+              );
             })
             .catch(error => {
               console.error('Error generating fingerprint:', error);
@@ -227,12 +227,13 @@ async function generateQRCode(res = null, req) {
         }
       }
     });
-
-    // Function to periodically generate new QR code
-  function generateQRCodePeriodically() {
+  });
+}
+// Function to periodically generate new QR code
+function generateQRCodePeriodically() {
   setInterval(() => {
     qrCodeCounter++;
-    console.log(`QR code counter updated to: ${qrCodeCounter}`);
+    console.log(QR code counter updated to: ${qrCodeCounter});
     generateQRCode(); // Generate QR code without sending a response
   }, 30000); // Generate a new QR code every 30 seconds
 }
@@ -242,6 +243,6 @@ generateQRCodePeriodically();
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Server is running at http://${localip}:${port}`);
+  console.log(Server is running at http://${localip}:${port});
 });
 
