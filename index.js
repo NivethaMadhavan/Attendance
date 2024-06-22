@@ -175,7 +175,7 @@ async function generateQRCode(res = null, req) {
   return new Promise((resolve, reject) => {
     const randomComponent = Math.floor(Math.random() * 1000);
     const timestamp = new Date().getTime();
-    const cloudURL = https://attendance-4au9.onrender.com/submit; // Replace with your cloud URL
+    const cloudURL = https://ahttps://attendance-4au9.onrender.com/submit; // Replace with your cloud URL
     const qrCodeData = ${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent};
 
     qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
