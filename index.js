@@ -30,52 +30,19 @@ client.connect()
   .catch(err => console.error('Error connecting to the database:', err));
 
 // Function to generate the QR code
-async function generateQRCode(res = null, req = null) {
+async function generateQRCode(sessionData) {
   const randomComponent = Math.floor(Math.random() * 1000);
   const timestamp = new Date().getTime();
   const cloudURL = `https://attendance-4au9.onrender.com/submit`;
-  const qrCodeData = `${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}`;
+  const qrCodeData = `${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}&class=${sessionData.className}&date=${sessionData.date}&time=${sessionData.time}`;
 
   return new Promise((resolve, reject) => {
     qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
       if (err) {
         console.error('Error generating QR code:', err);
-        if (res) {
-          res.status(500).send('Internal Server Error');
-        }
         reject(err);
       } else {
-        console.log(`Generated QR code with data: ${qrCodeData}`);
-        if (res) {
-          res.send(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>QR Code</title>
-            </head>
-            <body>
-              <h1>Scan the QR code</h1>
-              <img id="qrCodeImage" src="${qrCode}" alt="QR Code">
-              <script>
-                function fetchNewQRCode() {
-                  fetch('/new-qrcode')
-                    .then(response => response.json())
-                    .then(data => {
-                      document.getElementById('qrCodeImage').src = data.qrCodeData;
-                    })
-                    .catch(error => console.error('Error fetching new QR code:', error));
-                }
-                setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
-                fetchNewQRCode(); // Initial fetch
-              </script>
-            </body>
-            </html>
-          `);
-        } else {
-          resolve(qrCode);
-        }
+        resolve(qrCode);
       }
     });
   });
@@ -85,7 +52,13 @@ async function generateQRCode(res = null, req = null) {
 app.get('/', async (req, res) => {
   try {
     console.log('Generating QR code for home page');
-    await generateQRCode(res, req);
+    await generateQRCode({
+      qrCodeCounter,
+      className: 'Home',
+      date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+      time: new Date().toTimeString().split(' ')[0] // HH:MM:SS format
+    });
+    res.sendFile(__dirname + '/index.html'); // Serve the main application UI
   } catch (error) {
     console.error('Error generating QR code:', error);
     res.status(500).send('Internal Server Error');
@@ -96,7 +69,13 @@ app.get('/', async (req, res) => {
 app.get('/new-qrcode', async (req, res) => {
   try {
     console.log('Generating new QR code');
-    const qrCodeData = await generateQRCode(null, req);
+    const qrCodeData = await generateQRCode({
+      qrCodeCounter,
+      className: 'Home',
+      date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+      time: new Date().toTimeString().split(' ')[0] // HH:MM:SS format
+    });
+    qrCodeCounter++; // Increment QR code counter
     res.json({ qrCodeData });
   } catch (error) {
     console.error('Error generating new QR code:', error);
@@ -114,103 +93,7 @@ app.get('/submit', async (req, res) => {
     if (qrCodeCounter !== requestedQrCode) {
       res.send('Rejected');
     } else {
-      res.send(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Attendance</title>
-          <link rel="icon" href="letter_logo.png" type="image/x-icon">
-          <style>
-            body {
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              background-color: teal;
-              background-size: contain;
-              background-image: url("hire_now_bg.jpg") fixed;
-              background-position: center;
-              margin: 0;
-              padding: 0;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100vh;
-              color: navy;
-            }
-            h2 {
-              color: white;
-              font-weight: 700;
-              font-size: 28px;
-              text-align: center;
-            }
-            form {
-              backdrop-filter: blur(100px);
-              padding: 20px;
-              padding-right: 70px;
-              padding-left: 50px;
-              box-shadow: 0px 4px 6px #38497C;
-              border-radius: 15px;
-              width: 500px;
-            }
-            label {
-              display: block;
-              margin-bottom: 10px;
-              color: black;
-              font-size: 22px;
-            }
-            input, textarea {
-              width: 100%;
-              padding: 10px;
-              margin-bottom: 15px;
-              border: none;
-              border-radius: 8px;
-              background: rgba(255, 255, 255, 0.1);
-              color: black;
-            }
-            input {
-              height: 40px;
-            }
-            textarea {
-              height: 110px;
-            }
-            button {
-              background-color: #5F7DEF;
-              color: black;
-              padding: 10px 15px;
-              border: none;
-              border-radius: 8px;
-              cursor: pointer;
-              transition: background-color 0.3s ease;
-            }
-            button:hover {
-              background-color: #3e4093;
-              color: white;
-            }
-          </style>
-          <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
-        </head>
-        <body>
-          <form id="hire_now" action="/submit" method="post">
-            <h2>Accepted! Enter details:</h2>
-            <label for="name">Your Name:</label>
-            <input type="text" id="name" name="name" required>
-            <label for="usn">USN:</label>
-            <input type="text" id="usn" name="usn">
-            <input type="hidden" id="qrcode" name="qrcode" value="${qrCodeCounter}">
-            <input type="hidden" id="clientFingerprint" name="clientFingerprint">
-            <button type="submit">Submit</button>
-          </form>
-          <script>
-            async function generateFingerprint() {
-              const fp = await FingerprintJS.load();
-              const result = await fp.get();
-              document.getElementById('clientFingerprint').value = result.visitorId;
-            }
-            generateFingerprint();
-          </script>
-        </body>
-        </html>
-      `);
+      res.sendFile(__dirname + '/form.html'); // Serve the form submission HTML
       console.log('End: qrCodeCounter:', qrCodeCounter);
     }
   } catch (error) {
@@ -234,7 +117,7 @@ app.post('/submit', (req, res) => {
       res.status(400).send('Bad Request: Missing client fingerprint');
       return;
     }
-   
+
     if (qrCodeCounter === requestedQrCode) {
       // Check if the fingerprint is already in the table
       const checkQuery = 'SELECT COUNT(*) AS count FROM "FormSubmissions" WHERE device_fingerprint = $1';
@@ -282,7 +165,12 @@ function generateQRCodePeriodically() {
   setInterval(() => {
     qrCodeCounter++;
     console.log(`QR code counter updated to: ${qrCodeCounter}`);
-    generateQRCode(); // Generate QR code without sending a response
+    generateQRCode({
+      qrCodeCounter,
+      className: 'Home',
+      date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+      time: new Date().toTimeString().split(' ')[0] // HH:MM:SS format
+    }); // Generate QR code without sending a response
   }, 30000); // Generate a new QR code every 30 seconds
 }
 
