@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Generation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .qr-code {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .qr-code img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>QR Generation</h1>
+    <div class="qr-code" id="qrCodeContainer">
+      <!-- QR code will be inserted here -->
+    </div>
+  </div>
+  <script>
+    function fetchNewQRCode() {
+      fetch('/new-qrcode')
+        .then(response => response.json())
+        .then(data => {
+          const img = document.createElement('img');
+          img.src = data.qrCodeData;
+          document.getElementById('qrCodeContainer').innerHTML = ''; // Clear previous QR code
+          document.getElementById('qrCodeContainer').appendChild(img);
+        })
+        .catch(error => console.error('Error fetching new QR code:', error));
+    }
+
+    // Fetch a new QR code every 30 seconds
+    setInterval(fetchNewQRCode, 30000);
+    
+    // Initial fetch
+    fetchNewQRCode();
+  </script>
+</body>
+</html>
+
+
