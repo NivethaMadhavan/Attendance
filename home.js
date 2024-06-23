@@ -188,7 +188,7 @@ app.get('/teacher-dashboard', (req, res) => {`
   </script>
 </body>
 </html>
-  `);
+  `
 });
 
 // Endpoint to generate QR code based on class name
