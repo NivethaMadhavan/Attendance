@@ -43,7 +43,7 @@ async function generateQRCode(className = '') {
         console.error('Error generating QR code:', err);
         reject(err);
       } else {
-        console.log('Generated QR code with data: ${qrCodeData}');
+        console.log(`Generated QR code with data: ${qrCodeData}`);
         resolve(qrCode);
       }
     });
@@ -348,7 +348,7 @@ app.post('/submit', async (req, res) => {
     const { name, usn, className } = req.body;
     const timestamp = new Date();
     const formattedTimestamp = timestamp.toISOString().replace(/[:.]/g, '-');
-    const tableName = "Department_${className}_${formattedTimestamp}";
+    const tableName = `Department_${className}_${formattedTimestamp}`;
 
     if (!clientFingerprint) {
       res.status(400).send('Bad Request: Missing client fingerprint');
