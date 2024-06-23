@@ -149,6 +149,11 @@ app.get('/teacher-dashboard', (req, res) => {
   `);
 });
 
+app.get('/teacher-dashboard', (req, res) => {
+  // Logic to render or send data for the teacher dashboard
+  res.send('Welcome to Teacher Dashboard');
+});
+
 // Start the server
 app.listen(port, '0.0.0.0', () => {
   console.log(`Teacher server is running at http://0.0.0.0:${port}`);
