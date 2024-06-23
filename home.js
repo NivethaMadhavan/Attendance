@@ -18,6 +18,13 @@ let qrCodeCounter = 0;
 let currentClassName = 'defaultClassName'; // Initial class name
 let intervalId = null; // To store the interval ID
 
+// Store session information
+let currentSession = {
+  className: null,
+  timestamp: null,
+  tableName: null,
+};
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
@@ -228,32 +235,40 @@ app.get('/teacher-dashboard', (req, res) => {
 app.post('/generate-qr', (req, res) => {
   try {
     const className = req.body.className; // Get class name from request body
-    if (className !== currentClassName) {
+    if (className !== currentSession.className) {
       currentClassName = className; // Update global current class name
+      currentSession.className = className;
+      currentSession.timestamp = new Date();
+      currentSession.tableName = `Department_${className}_${currentSession.timestamp.toISOString().replace(/[:.]/g, '-')}`;
       startQRCodeGenerationInterval(className); // Start a new interval with the updated class name
     }
-    generateQRCode(className) // Generate the first QR code immediately
+    // Generate the first QR code immediately
+    generateQRCode(className)
       .then(qrCode => {
-        res.json({ qrCode });
+        // Create table if it doesn't exist
+        const createTableQuery = `
+          CREATE TABLE IF NOT EXISTS "${currentSession.tableName}" (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255),
+            usn VARCHAR(255),
+            device_fingerprint VARCHAR(255)
+          )
+        `;
+        client.query(createTableQuery)
+          .then(() => {
+            res.json({ qrCode });
+          })
+          .catch(err => {
+            console.error('Error creating table:', err);
+            res.status(500).send('Internal Server Error');
+          });
       })
-      .catch(error => {
-        console.error(`Error generating QR code:`, error);
+      .catch(err => {
+        console.error('Error generating QR code:', err);
         res.status(500).send('Internal Server Error');
       });
   } catch (error) {
-    console.error(`Error processing generate QR request:`, error);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
-// Endpoint to generate the QR code for the QR code page
-app.get('/qr-code', async (req, res) => {
-  try {
-    console.log('Generating new QR code');
-    const qrCodeData = await generateQRCode(currentClassName);
-    res.json({ qrCodeData });
-  } catch (error) {
-    console.error(`Error generating new QR code:`, error);
+    console.error(`Error generating QR code:`, error);
     res.status(500).send('Internal Server Error');
   }
 });
@@ -297,7 +312,7 @@ app.get('/submit', async (req, res) => {
               font-size: 28px;
               text-align: center;
             }
-                        form {
+            form {
               backdrop-filter: blur(100px);
               padding: 20px;
               padding-right: 70px;
@@ -381,9 +396,6 @@ app.post('/submit', async (req, res) => {
     const requestedQrCode = parseInt(req.body.qrcode);
     const clientFingerprint = req.body.clientFingerprint;
     const { name, usn, className } = req.body;
-    const timestamp = new Date();
-    const formattedTimestamp = timestamp.toISOString().replace(/[:.]/g, '-');
-    const tableName = `Department_${className}_${formattedTimestamp}`;
 
     if (!clientFingerprint) {
       res.status(400).send('Bad Request: Missing client fingerprint');
@@ -391,20 +403,9 @@ app.post('/submit', async (req, res) => {
     }
 
     if (qrCodeCounter === requestedQrCode) {
-      // Create the table if it doesn't exist
-      const createTableQuery = `
-        CREATE TABLE IF NOT EXISTS "${tableName}" (
-          id SERIAL PRIMARY KEY,
-          name VARCHAR(255),
-          usn VARCHAR(255),
-          device_fingerprint VARCHAR(255)
-        )
-      `;
-      await client.query(createTableQuery);
-
       // Check if the fingerprint is already in the table
       const checkQuery = `
-        SELECT COUNT(*) AS count FROM "${tableName}" WHERE device_fingerprint = $1
+        SELECT COUNT(*) AS count FROM "${currentSession.tableName}" WHERE device_fingerprint = $1
       `;
       const checkResult = await client.query(checkQuery, [clientFingerprint]);
 
@@ -412,7 +413,7 @@ app.post('/submit', async (req, res) => {
         res.send('Form submission rejected: Fingerprint already submitted');
       } else {
         const insertQuery = `
-          INSERT INTO "${tableName}" (name, usn, device_fingerprint) VALUES ($1, $2, $3)
+          INSERT INTO "${currentSession.tableName}" (name, usn, device_fingerprint) VALUES ($1, $2, $3)
         `;
         await client.query(insertQuery, [name, usn, clientFingerprint]);
         res.send('Form submitted successfully');
