@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: home-service
+    env: node
+    buildCommand: 'npm install'
+    startCommand: 'node home.js'
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: TEACHER_PORT
+        value: 10001
+      - key: QR_PORT
+        value: 10000
+
+  - type: web
+    name: teacher-service
+    env: node
+    buildCommand: 'npm install'
+    startCommand: 'node teacher.js'
+    envVars:
+      - key: PORT
+        value: 10001
+
+  - type: web
+    name: qr-service
+    env: node
+    buildCommand: 'npm install'
+    startCommand: 'node index.js'
+    envVars:
+      - key: PORT
+        value: 10000
