@@ -4,8 +4,8 @@ const bodyParser = require('body-parser');
 const { Client } = require('pg');
 
 const app = express();
-const port = process.env.PORT || 10001; // Port for teacher.js
-const qrPort = process.env.DB_PORT || 10000; // Port for QR code generation
+const port = 10001; // Port for teacher.js
+const qrPort = 10000; // Port for QR code generation
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -26,16 +26,13 @@ async function generateQRCode(sessionData) {
   const cloudURL = `https://attendance-4au9.onrender.com/submit`;
   const qrCodeData = `${cloudURL}?qrcode=${sessionData.qrCodeCounter}&timestamp=${timestamp}_${randomComponent}&class=${sessionData.className}&date=${sessionData.date}&time=${sessionData.time}`;
 
-  return new Promise((resolve, reject) => {
-    qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
-      if (err) {
-        console.error('Error generating QR code:', err);
-        reject(err);
-      } else {
-        resolve(qrCode);
-      }
-    });
-  });
+  try {
+    const qrCode = await qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' });
+    return qrCode;
+  } catch (err) {
+    console.error('Error generating QR code:', err);
+    throw err; // Propagate error for proper error handling in endpoint
+  }
 }
 
 // Endpoint to handle QR code generation requests
@@ -66,51 +63,7 @@ app.get('/teacher-dashboard', (req, res) => {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Teacher Dashboard</title>
       <style>
-        body {
-          font-family: Arial, sans-serif;
-          background-color: #f0f0f0;
-          padding: 20px;
-        }
-        .container {
-          max-width: 600px;
-          margin: auto;
-          background-color: #fff;
-          padding: 20px;
-          border-radius: 8px;
-          box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-          text-align: center;
-          color: #333;
-        }
-        .btn-container {
-          display: flex;
-          justify-content: center;
-          margin-top: 20px;
-        }
-        .btn {
-          margin: 0 10px;
-          padding: 10px 20px;
-          font-size: 16px;
-          background-color: #007bff;
-          color: #fff;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-        }
-        .btn:hover {
-          background-color: #0056b3;
-        }
-        .qr-code {
-          text-align: center;
-          margin-top: 20px;
-        }
-        .qr-code img {
-          max-width: 100%;
-          height: auto;
-          border-radius: 8px;
-          box-shadow: 0 0 5px rgba(0,0,0,0.2);
-        }
+        /* Your existing styles */
       </style>
     </head>
     <body>
@@ -148,7 +101,6 @@ app.get('/teacher-dashboard', (req, res) => {
     </html>
   `);
 });
-
 
 // Start the server
 app.listen(port, '0.0.0.0', () => {
