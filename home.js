@@ -5,13 +5,7 @@ const { Client } = require('pg');
 const ip = require('ip');
 
 const app = express();
-let port = parseInt(process.env.PORT, 10) || 10000; // Default to 10000 if PORT is not set or invalid
-
-// Ensure the port is within the valid range
-if (port < 0 || port > 65535) {
-  console.error(`Invalid port number: ${port}. Falling back to default port 10000.`);
-  port = 10000;
-}
+const port = process.env.PORT || 10000; // Default to 10000 if PORT is not set
 
 const localip = ip.address();
 let qrCodeCounter = 0;
@@ -29,8 +23,8 @@ client.connect()
   .then(() => console.log('Connected to the database'))
   .catch(err => console.error('Error connecting to the database:', err));
 
-// Function to generate the QR code
-async function generateQRCode(className = '', res = null, req = null) {
+// Function to generate the QR code and return data URL
+async function generateQRCode(className = '') {
   const randomComponent = Math.floor(Math.random() * 1000);
   const timestamp = new Date().getTime();
   const cloudURL = `https://attendance-4au9.onrender.com/submit`;
@@ -43,42 +37,14 @@ async function generateQRCode(className = '', res = null, req = null) {
         reject(err);
       } else {
         console.log(`Generated QR code with data: ${qrCodeData}`);
-        if (res) {
-          res.send(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>QR Code</title>
-            </head>
-            <body>
-              <h1>Scan the QR code</h1>
-              <img id="qrCodeImage" src="${qrCode}" alt="QR Code">
-              <script>
-                function fetchNewQRCode() {
-                  fetch('/new-qrcode')
-                    .then(response => response.json())
-                    .then(data => {
-                      document.getElementById('qrCodeImage').src = data.qrCodeData;
-                    })
-                    .catch(error => console.error('Error fetching new QR code:', error));
-                }
-                setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
-                fetchNewQRCode(); // Initial fetch
-              </script>
-            </body>
-            </html>
-          `);
-          resolve(); // Ensure the Promise is resolved
-        } else {
-          resolve(qrCode);
-        }
+        qrCodeCounter++; // Increment the QR code counter
+        resolve(qrCode); // Resolve with QR code data URL
       }
     });
   });
 }
 
+// Endpoint to serve the latest QR code with updated counter
 app.get('/latest-qr-code', async (req, res) => {
   try {
     const qrCode = await generateQRCode();
@@ -118,6 +84,17 @@ app.get('/latest-qr-code', async (req, res) => {
   }
 });
 
+// Endpoint to fetch a new QR code data URL for periodic updates
+app.get('/new-qrcode', async (req, res) => {
+  try {
+    const qrCodeData = await generateQRCode();
+    res.json({ qrCodeData });
+  } catch (error) {
+    console.error('Error generating new QR code:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
 // Endpoint to generate the QR code for the home page
 app.get('/', (req, res) => {
   res.send(`
@@ -145,15 +122,7 @@ app.get('/', (req, res) => {
 
 // Route to redirect to Teacher Dashboard
 app.get('/teacher-dashboard', (req, res) => {
-  // Replace with actual class list retrieval logic if needed
-  const classes = ['Class A', 'Class B', 'Class C'];
-
-  let classButtons = classes.map(className => `
-    <button class="btn" onclick="generateQRCode('${className}')">Generate QR for ${className}</button>
-  `).join('');
-
-  res.send(`
-    <!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -188,12 +157,16 @@ app.get('/teacher-dashboard', (req, res) => {
   <div class="container">
     <h1>Teacher Dashboard</h1>
     <div class="btn-container">
-      ${classButtons}
+      <!-- Buttons to generate QR codes -->
+      <button class="btn" onclick="generateQRCode('Class A')">Generate QR for Class A</button>
+      <button class="btn" onclick="generateQRCode('Class B')">Generate QR for Class B</button>
+      <button class="btn" onclick="generateQRCode('Class C')">Generate QR for Class C</button>
     </div>
     <div class="qr-code" id="qrCodeContainer">
       <!-- QR code will be inserted here -->
     </div>
   </div>
+
   <script>
     function generateQRCode(className) {
       fetch('/generate-qr', {
@@ -226,29 +199,6 @@ app.post('/generate-qr', async (req, res) => {
     res.json({ qrCode: qrCodeData }); // Send generated QR code as JSON response
   } catch (error) {
     console.error('Error generating QR code:', error);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
-// Endpoint to generate the QR code for the home page
-app.get('/qr-code', async (req, res) => {
-  try {
-    console.log('Generating QR code for QR code page');
-    await generateQRCode(res, req);
-  } catch (error) {
-    console.error('Error generating QR code:', error);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
-// Endpoint to fetch a new QR code
-app.get('/new-qrcode', async (req, res) => {
-  try {
-    console.log('Generating new QR code');
-    const qrCodeData = await generateQRCode(null, req);
-    res.json({ qrCodeData });
-  } catch (error) {
-    console.error('Error generating new QR code:', error);
     res.status(500).send('Internal Server Error');
   }
 });
@@ -323,7 +273,7 @@ app.get('/submit', async (req, res) => {
           <div class="form-container">
             <h2>Submit Attendance</h2>
             <form action="/submit" method="post">
-              <div class="form-group">
+                            <div class="form-group">
                 <label for="studentName">Student Name</label>
                 <input type="text" id="studentName" name="studentName" required>
               </div>
@@ -414,6 +364,9 @@ app.post('/submit', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
+// Serve static files from 'public' directory
+app.use(express.static('public'));
 
 // Start server
 app.listen(port, () => {
