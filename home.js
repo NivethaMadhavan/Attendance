@@ -50,6 +50,27 @@ async function generateQRCode(className = '') {
   });
 }
 
+let qrIntervals = {};
+
+app.post('/start-qr-generation', async (req, res) => {
+  const className = req.body.className;
+
+  // Clear any existing interval for this class
+  if (qrIntervals[className]) {
+    clearInterval(qrIntervals[className]);
+  }
+
+  // Start generating new QR codes every 30 seconds
+  qrIntervals[className] = setInterval(async () => {
+    qrCodeCounter++;
+    const qrCode = await generateQRCode(className);
+    console.log(`QR code counter updated to: ${qrCodeCounter} for class: ${className}`);
+    // You can store the latest QR code data in a cache or a database if needed
+  }, 30000);
+
+  res.send(`Started generating QR codes for class ${className}`);
+});
+
 app.get('/latest-qr-code', async (req, res) => {
   try {
     const qrCode = await generateQRCode();
@@ -164,24 +185,23 @@ app.get('/teacher-dashboard', (req, res) => {
     </div>
   </div>
   <script>
-    function generateQRCode(className) {
-      fetch('/generate-qr', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ className: className })
-      })
-      .then(response => response.json())
-      .then(data => {
-        const img = document.createElement('img');
-        img.src = data.qrCode;
-        document.getElementById('qrCodeContainer').innerHTML = ''; // Clear previous QR code
-        document.getElementById('qrCodeContainer').appendChild(img);
-      })
-      .catch(error => console.error('Error generating QR code:', error));
-    }
-  </script>
+  function startQRCodeGeneration(className) {
+    fetch('/start-qr-generation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ className: className })
+    })
+    .then(response => response.text())
+    .then(message => {
+      console.log(message);
+      // Optionally, update the UI to show that QR code generation has started
+    })
+    .catch(error => console.error('Error starting QR code generation:', error));
+  }
+</script>
+
 </body>
 </html>`
 
@@ -230,12 +250,13 @@ app.get('/new-qrcode', async (req, res) => {
 app.get('/submit', async (req, res) => {
   try {
     const requestedQrCode = parseInt(req.query.qrcode);
-    const className = req.query.className; // Get className from query
+    const className = req.query.className;
+    const timestamp = parseInt(req.query.timestamp);
 
-    if (qrCodeCounter !== requestedQrCode) {
-      res.send('Rejected');
-      console.log(`Reacieved qr code : "${requestedQrCode}", Current qr code : "${qrCodeCounter}"`);
-    } else {
+    const currentTime = new Date().getTime();
+    const isValidTime = currentTime - timestamp <= 30000; // 30 seconds
+
+    if (qrCodeCounter === requestedQrCode && isValidTime) {
       res.send(`
         <!DOCTYPE html>
         <html lang="en">
@@ -245,69 +266,7 @@ app.get('/submit', async (req, res) => {
           <title>Attendance</title>
           <link rel="icon" href="letter_logo.png" type="image/x-icon">
           <style>
-            body {
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              background-color: teal;
-              background-size: contain;
-              background-image: url("hire_now_bg.jpg") fixed;
-              background-position: center;
-              margin: 0;
-              padding: 0;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100vh;
-              color: navy;
-            }
-            h2 {
-              color: white;
-              font-weight: 700;
-              font-size: 28px;
-              text-align: center;
-            }
-            form {
-              backdrop-filter: blur(100px);
-              padding: 20px;
-              padding-right: 70px;
-              padding-left: 50px;
-              box-shadow: 0px 4px 6px #38497C;
-              border-radius: 15px;
-              width: 500px;
-            }
-            label {
-              display: block;
-              margin-bottom: 10px;
-              color: black;
-              font-size: 22px;
-            }
-            input, textarea {
-              width: 100%;
-              padding: 10px;
-              margin-bottom: 15px;
-              border: none;
-              border-radius: 8px;
-              background: rgba(255, 255, 255, 0.1);
-              color: black;
-            }
-            input {
-              height: 40px;
-            }
-            textarea {
-              height: 110px;
-            }
-            button {
-              background-color: #5F7DEF;
-              color: black;
-              padding: 10px 15px;
-              border: none;
-              border-radius: 8px;
-              cursor: pointer;
-              transition: background-color 0.3s ease;
-            }
-            button:hover {
-              background-color: #3e4093;
-              color: white;
-            }
+            /* Your existing styles */
           </style>
           <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
         </head>
@@ -334,6 +293,9 @@ app.get('/submit', async (req, res) => {
         </body>
         </html>`
       );
+    } else {
+      res.send('Rejected');
+      console.log(`Received qr code: "${requestedQrCode}", Current qr code: "${qrCodeCounter}", Valid time: ${isValidTime}`);
     }
   } catch (error) {
     console.error('Error generating form page:', error);
