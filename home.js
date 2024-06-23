@@ -30,7 +30,6 @@ client.connect()
   .catch(err => console.error('Error connecting to the database:', err));
 
 // Function to generate the QR code
-// Function to generate the QR code
 async function generateQRCode(className = '') {
   const randomComponent = Math.floor(Math.random() * 1000);
   const timestamp = new Date().getTime();
@@ -76,7 +75,7 @@ app.get('/latest-qr-code', async (req, res) => {
         </style>
       </head>
       <body>
-        <img src="${qrCode}" alt="QR Code ${qrCodeCounter}" />
+        <img src="${qrCode}?cb=${new Date().getTime()}" alt="QR Code ${qrCodeCounter}" />
         <script>
           setTimeout(() => { window.location.reload() }, 40000); // Reload every 40 seconds
         </script>
@@ -89,9 +88,7 @@ app.get('/latest-qr-code', async (req, res) => {
   }
 });
 
-
 // Endpoint to generate the QR code for the home page
-// Route to the home page
 app.get('/', (req, res) => {
   res.send(`
     <!DOCTYPE html>
@@ -190,13 +187,9 @@ app.get('/teacher-dashboard', (req, res) => {
   </script>
 </body>
 </html>
-
   `);
 });
 
-
-// Endpoint to generate QR code based on class name
-// Endpoint to generate QR code based on class name
 // Endpoint to generate QR code based on class name
 app.post('/generate-qr', async (req, res) => {
   try {
