@@ -368,7 +368,7 @@ app.post('/submit', async (req, res) => {
       await client.query(createTableQuery);
 
       // Check if the fingerprint is already in the table
-      const checkQuery = "SELECT COUNT(*) AS count FROM "${tableName}" WHERE device_fingerprint = $1";
+      const checkQuery = `SELECT COUNT(*) AS count FROM "${tableName}" WHERE device_fingerprint = $1`;
       const checkResult = await client.query(checkQuery, [clientFingerprint]);
 
       if (checkResult.rows[0].count > 0) {
