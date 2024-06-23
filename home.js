@@ -167,8 +167,8 @@ app.get('/teacher-dashboard', (req, res) => {
       <div class="container">
         <h1>Teacher Dashboard</h1>
         <div class="btn-container">
-          <button class="btn" onclick="generateQRCode('ClassA')">Generate QR for Class A</button>
-          <button class="btn" onclick="generateQRCode('ClassB')">Generate QR for Class B</button>
+          <button id="btnClassA" class="btn">Generate QR for Class A</button>
+          <button id="btnClassB" class="btn">Generate QR for Class B</button>
           <a href="/qr-code" class="btn" target="_blank">QR Generation</a>
         </div>
         <div class="qr-code" id="qrCodeContainer">
@@ -176,51 +176,50 @@ app.get('/teacher-dashboard', (req, res) => {
         </div>
       </div>
       <script>
-  // JavaScript part of your teacher dashboard HTML
-let currentClassName = 'ClassA'; // Initial class name
-    let qrCodeCounter = 0; // This will keep track of the latest QR code counter
+        // JavaScript part of your teacher dashboard HTML
+        let currentClassName = 'ClassA'; // Initial class name
+        let qrCodeCounter = 0; // This will keep track of the latest QR code counter
 
-    function generateQRCode(className) {
-      fetch('/generate-qr', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ className: className })
-      })
-      .then(response => response.json())
-      .then(data => {
-        const img = document.createElement('img');
-        img.src = data.qrCode;
-        img.alt = `QR Code for ${className}`;
-        document.getElementById('qrCodeContainer').innerHTML = ''; // Clear previous QR code
-        document.getElementById('qrCodeContainer').appendChild(img);
-        currentClassName = className; // Update current class name
-        qrCodeCounter++; // Increment the QR code counter
-      })
-      .catch(error => console.error('Error generating QR code:', error));
-    }
+        function generateQRCode(className) {
+          fetch('/generate-qr', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ className: className })
+          })
+          .then(response => response.json())
+          .then(data => {
+            const img = document.createElement('img');
+            img.src = data.qrCode;
+            img.alt = `QR Code for ${className}`;
+            document.getElementById('qrCodeContainer').innerHTML = ''; // Clear previous QR code
+            document.getElementById('qrCodeContainer').appendChild(img);
+            currentClassName = className; // Update current class name
+            qrCodeCounter++; // Increment the QR code counter
+          })
+          .catch(error => console.error('Error generating QR code:', error));
+        }
 
-    // Function to refresh the QR code every 30 seconds
-    function refreshQRCode() {
-      generateQRCode(currentClassName); // Call generateQRCode with current class name
-    }
+        // Function to refresh the QR code every 30 seconds
+        function refreshQRCode() {
+          generateQRCode(currentClassName); // Call generateQRCode with current class name
+        }
 
-    // Initial call to generate QR code and start periodic refresh
-    generateQRCode(currentClassName);
-    setInterval(refreshQRCode, 30000); // Refresh every 30 seconds
+        // Initial call to generate QR code and start periodic refresh
+        generateQRCode(currentClassName);
+        setInterval(refreshQRCode, 30000); // Refresh every 30 seconds
 
-    // Event listeners for buttons to change the class name
-    document.getElementById('btnClassA').addEventListener('click', () => {
-      generateQRCode('ClassA');
-    });
+        // Event listeners for buttons to change the class name
+        document.getElementById('btnClassA').addEventListener('click', () => {
+          generateQRCode('ClassA');
+        });
 
-    document.getElementById('btnClassB').addEventListener('click', () => {
-      generateQRCode('ClassB');
-    });
+        document.getElementById('btnClassB').addEventListener('click', () => {
+          generateQRCode('ClassB');
+        });
 
-</script>
-
+      </script>
     </body>
     </html>
   `);
