@@ -10,7 +10,7 @@ services:
       - key: TEACHER_PORT
         value: 10001
       - key: QR_PORT
-        value: 10000
+        value: 10002
 
   - type: web
     name: teacher-service
