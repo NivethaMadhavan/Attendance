@@ -30,7 +30,6 @@ client.connect()
   .catch(err => console.error('Error connecting to the database:', err));
 
 // Function to generate the QR code
-// Function to generate the QR code
 async function generateQRCode(className = '') {
   const randomComponent = Math.floor(Math.random() * 1000);
   const timestamp = new Date().getTime();
@@ -110,9 +109,6 @@ app.get('/latest-qr-code', async (req, res) => {
   }
 });
 
-
-// Endpoint to generate the QR code for the home page
-// Route to the home page
 app.get('/', (req, res) => {
   res.send(`
     <!DOCTYPE html>
@@ -137,81 +133,73 @@ app.get('/', (req, res) => {
   );
 });
 
-// Route to redirect to Teacher Dashboard
 app.get('/teacher-dashboard', (req, res) => {
-  // Replace with actual class list retrieval logic if needed
   res.send(`
     <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teacher Dashboard</title>
-  <style>
-    .container {
-      text-align: center;
-    }
-    .btn-container {
-      margin: 20px;
-    }
-    .btn {
-      padding: 10px 20px;
-      background-color: #5F7DEF;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin: 10px;
-      text-decoration: none;
-    }
-    .btn:hover {
-      background-color: #3e4093;
-    }
-    .qr-code {
-      margin: 20px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Teacher Dashboard</h1>
-    <div class="btn-container">
-      <button class="btn" onclick="generateQRCode('ClassA')">Generate QR for Class A</button>
-      <button class="btn" onclick="generateQRCode('ClassB')">Generate QR for Class B</button>
-      <a href="/qr-code" class="btn" target="_blank">QR Generation</a>
-    </div>
-    <div class="qr-code" id="qrCodeContainer">
-      <!-- QR code will be inserted here -->
-    </div>
-  </div>
-  <script>
-  function startQRCodeGeneration(className) {
-    fetch('/start-qr-generation', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ className: className })
-    })
-    .then(response => response.text())
-    .then(message => {
-      console.log(message);
-      // Optionally, update the UI to show that QR code generation has started
-    })
-    .catch(error => console.error('Error starting QR code generation:', error));
-  }
-</script>
-
-</body>
-</html>`
-
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Teacher Dashboard</title>
+      <style>
+        .container {
+          text-align: center;
+        }
+        .btn-container {
+          margin: 20px;
+        }
+        .btn {
+          padding: 10px 20px;
+          background-color: #5F7DEF;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          margin: 10px;
+          text-decoration: none;
+        }
+        .btn:hover {
+          background-color: #3e4093;
+        }
+        .qr-code {
+          margin: 20px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>Teacher Dashboard</h1>
+        <div class="btn-container">
+          <button class="btn" onclick="startQRCodeGeneration('ClassA')">Generate QR for Class A</button>
+          <button class="btn" onclick="startQRCodeGeneration('ClassB')">Generate QR for Class B</button>
+          <a href="/qr-code" class="btn" target="_blank">QR Generation</a>
+        </div>
+        <div class="qr-code" id="qrCodeContainer">
+          <!-- QR code will be inserted here -->
+        </div>
+      </div>
+      <script>
+        function startQRCodeGeneration(className) {
+          fetch('/start-qr-generation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ className: className })
+          })
+          .then(response => response.text())
+          .then(message => {
+            console.log(message);
+            // Optionally, update the UI to show that QR code generation has started
+          })
+          .catch(error => console.error('Error starting QR code generation:', error));
+        }
+      </script>
+    </body>
+    </html>`
   );
 });
 
-
-// Endpoint to generate QR code based on class name
-// Endpoint to generate QR code based on class name
-// Endpoint to generate QR code based on class name
 app.post('/generate-qr', async (req, res) => {
   try {
     const className = req.body.className; // Get class name from request body
@@ -223,7 +211,6 @@ app.post('/generate-qr', async (req, res) => {
   }
 });
 
-// Endpoint to generate the QR code for the home page
 app.get('/qr-code', async (req, res) => {
   try {
     console.log('Generating QR code for QR code page');
@@ -234,7 +221,6 @@ app.get('/qr-code', async (req, res) => {
   }
 });
 
-// Endpoint to fetch a new QR code
 app.get('/new-qrcode', async (req, res) => {
   try {
     console.log('Generating new QR code');
@@ -246,12 +232,12 @@ app.get('/new-qrcode', async (req, res) => {
   }
 });
 
-// Endpoint to handle the QR code validation and show the form
 app.get('/submit', async (req, res) => {
   try {
     const requestedQrCode = parseInt(req.query.qrcode);
     const className = req.query.className;
-    const timestamp = parseInt(req.query.timestamp);
+    const timestampPart = req.query.timestamp.split('_')[0];
+    const timestamp = parseInt(timestampPart);
 
     const currentTime = new Date().getTime();
     const isValidTime = currentTime - timestamp <= 30000; // 30 seconds
@@ -266,7 +252,7 @@ app.get('/submit', async (req, res) => {
           <title>Attendance</title>
           <link rel="icon" href="letter_logo.png" type="image/x-icon">
           <style>
-            /* Your existing styles */
+              /* Your existing styles */
           </style>
           <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
         </head>
@@ -343,7 +329,7 @@ app.post('/submit', async (req, res) => {
       }
     } else {
       res.send('Form submission rejected: QR code mismatch');
-      console.log(`Reacieved qr code : "${requestedQrCode}", Current qr code : "${qrCodeCounter}"`);
+      console.log(`Received qr code: "${requestedQrCode}", Current qr code: "${qrCodeCounter}"`);
     }
   } catch (error) {
     console.error('Error processing form submission:', error);
@@ -351,18 +337,8 @@ app.post('/submit', async (req, res) => {
   }
 });
 
-// Function to periodically generate new QR code
-function generateQRCodePeriodically() {
-  setInterval(() => {
-    qrCodeCounter++;
-    console.log(`QR code counter updated to: ${qrCodeCounter}`);
-    generateQRCode(); // Generate QR code without sending a response
-  }, 30000); // Generate a new QR code every 30 seconds
-}
-
-// Start the periodic QR code generation
-generateQRCodePeriodically();
-
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on http://0.0.0.0:${port}`);
 });
+
+         
