@@ -143,7 +143,7 @@ app.get('/teacher-dashboard', (req, res) => {
   }
 
   function fetchLatestQRCode(className) {
-    fetch(`/latest-qr-code/${className}`)
+    fetch(`/latest-qr-code/"${className}"`)
       .then(response => response.text())
       .then(qrCode => {
         const qrCodeContainer = document.getElementById('qrCodeContainer');
