@@ -56,6 +56,7 @@ function startQRCodeGenerationInterval(className) {
   if (intervalId !== null) {
     clearInterval(intervalId); // Clear any existing interval
   }
+  qrCodeCounter = 0; // Reset counter when interval restarts
   intervalId = setInterval(() => {
     qrCodeCounter++;
     console.log(`QR code counter updated to: ${qrCodeCounter}`);
@@ -227,9 +228,10 @@ app.get('/teacher-dashboard', (req, res) => {
 app.post('/generate-qr', (req, res) => {
   try {
     const className = req.body.className; // Get class name from request body
-    currentClassName = className; // Update global current class name
-    qrCodeCounter = 0; // Reset the counter when class name changes
-    startQRCodeGenerationInterval(className); // Start a new interval with the updated class name
+    if (className !== currentClassName) {
+      currentClassName = className; // Update global current class name
+      startQRCodeGenerationInterval(className); // Start a new interval with the updated class name
+    }
     generateQRCode(className) // Generate the first QR code immediately
       .then(qrCode => {
         res.json({ qrCode });
@@ -248,7 +250,7 @@ app.post('/generate-qr', (req, res) => {
 app.get('/qr-code', async (req, res) => {
   try {
     console.log('Generating new QR code');
-    const qrCodeData = await generateQRCode(null, req);
+    const qrCodeData = await generateQRCode(currentClassName);
     res.json({ qrCodeData });
   } catch (error) {
     console.error(`Error generating new QR code:`, error);
@@ -429,5 +431,5 @@ app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on http://0.0.0.0:${port}`);
 });
 
-// Start the periodic QR code generation
+// Start the periodic QR code generation for the initial class
 startQRCodeGenerationInterval(currentClassName);
