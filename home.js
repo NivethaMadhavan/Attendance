@@ -234,6 +234,7 @@ app.get('/submit', async (req, res) => {
 
     if (qrCodeCounter !== requestedQrCode) {
       res.send('Rejected');
+      console.log(`Reacieved qr code : "${requestedQrCode}", Current qr code : "${qrCodeCounter}"`);
     } else {
       res.send(`
         <!DOCTYPE html>
