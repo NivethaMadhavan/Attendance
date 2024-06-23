@@ -30,11 +30,7 @@ client.connect()
   .catch(err => console.error('Error connecting to the database:', err));
 
 // Function to generate the QR code
-async function generateQRCode(className) {
-  if (!className) {
-    throw new Error('className is required for generating QR code');
-  }
-
+async function generateQRCode(className = '') {
   const randomComponent = Math.floor(Math.random() * 1000);
   const timestamp = new Date().getTime();
   const cloudURL = `https://attendance-4au9.onrender.com/submit`;
@@ -55,7 +51,17 @@ async function generateQRCode(className) {
   });
 }
 
+// Function to periodically generate new QR code
+function generateQRCodePeriodically(className) {
+  setInterval(() => {
+    qrCodeCounter++;
+    console.log(`QR code counter updated to: ${qrCodeCounter}`);
+    generateQRCode(className); // Generate QR code without sending a response
+  }, 30000); // Generate a new QR code every 30 seconds
+}
 // Endpoint to serve the latest QR code image
+
+
 // Endpoint to serve the latest QR code image
 app.get('/latest-qr-code', async (req, res) => {
   try {
@@ -170,44 +176,46 @@ app.get('/teacher-dashboard', (req, res) => {
         </div>
       </div>
       <script>
-  function generateQRCode(className) {
-    if (className) {
-      fetch('/generate-qr', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ className: className })
-      })
-      .then(response => response.json())
-      .then(data => {
-        const img = document.createElement('img');
-        img.src = data.qrCode;
-        document.getElementById('qrCodeContainer').innerHTML = ''; // Clear previous QR code
-        document.getElementById('qrCodeContainer').appendChild(img);
-      })
-      .catch(error => console.error('Error generating QR code:', error));
-    } else {
-      console.error('Invalid className:', className);
-    }
-  }
+  // JavaScript part of your teacher dashboard HTML
+let currentClassName = 'ClassA'; // Initial class name
 
-  // Event handlers for buttons
-  document.getElementById('btnClassA').addEventListener('click', function() {
-    generateQRCode('ClassA');
-  });
+function generateQRCode(className) {
+  fetch('/generate-qr', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ className: className })
+  })
+  .then(response => response.json())
+  .then(data => {
+    const img = document.createElement('img');
+    img.src = data.qrCode;
+    document.getElementById('qrCodeContainer').innerHTML = ''; // Clear previous QR code
+    document.getElementById('qrCodeContainer').appendChild(img);
+    currentClassName = className; // Update current class name
+  })
+  .catch(error => console.error('Error generating QR code:', error));
+}
 
-  document.getElementById('btnClassB').addEventListener('click', function() {
-    generateQRCode('ClassB');
-  });
+function refreshQRCode() {
+  generateQRCode(currentClassName); // Call generateQRCode with current class name
 
-  // Call generateQRCode initially to load the initial QR code
-  generateQRCode(); // Optional: This could be removed if not needed initially
+  // Schedule next refresh after 30 seconds
+  setTimeout(refreshQRCode, 30000);
+}
 
-  // Set up interval to refresh QR code every 30 seconds
-  setInterval(() => {
-    generateQRCode(); // Fetch and update QR code
-  }, 30000); // Refresh every 30 seconds
+// Event listeners for buttons
+document.getElementById('btnClassA').addEventListener('click', () => {
+  generateQRCode('ClassA');
+});
+
+document.getElementById('btnClassB').addEventListener('click', () => {
+  generateQRCode('ClassB');
+});
+
+refreshQRCode();
+
 </script>
 
     </body>
@@ -418,23 +426,6 @@ app.post('/submit', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
-// Function to periodically generate new QR code
-// Function to periodically generate new QR code
-function generateQRCodePeriodically(className) {
-  if (!className) {
-    throw new Error('className is required for generating QR code periodically');
-  }
-
-  setInterval(() => {
-    qrCodeCounter++;
-    console.log(`QR code counter updated to: ${qrCodeCounter}`);
-    generateQRCode(className).catch(err => {
-      console.error('Error generating QR code periodically:', err);
-    });
-  }, 30000); // Generate a new QR code every 30 seconds
-}
-
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on http://0.0.0.0:${port}`);
