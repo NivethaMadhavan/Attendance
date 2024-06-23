@@ -33,13 +33,13 @@ client.connect()
 async function generateQRCode(className = '') {
   const randomComponent = Math.floor(Math.random() * 1000);
   const timestamp = new Date().getTime();
-  const cloudURL = `https://attendance-4au9.onrender.com/submit`;
+  const cloudURL = "https://attendance-4au9.onrender.com/submit";
   const qrCodeData = `${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}&className=${className}`;
 
   return new Promise((resolve, reject) => {
     qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
       if (err) {
-        console.error(`Error generating QR code:`, err);
+        console.error('Error generating QR code:', err);
         reject(err);
       } else {
         console.log(`Generated QR code with data: ${qrCodeData}`);
@@ -48,6 +48,7 @@ async function generateQRCode(className = '') {
     });
   });
 }
+
 
 // Endpoint to serve the latest QR code image
 app.get('/latest-qr-code', async (req, res) => {
@@ -178,18 +179,21 @@ app.get('/teacher-dashboard', (req, res) => {
           })
           .catch(error => console.error('Error generating QR code:', error));
         }
-
+      
         // Call generateQRCode initially to load the initial QR code
-        generateQRCode();
-
+        generateQRCode(''); // Initially load QR code without className
+      
         // Set up interval to refresh QR code every 30 seconds
         setInterval(() => {
-          generateQRCode(); // Fetch and update QR code
+          generateQRCode(''); // Fetch and update QR code without className
         }, 30000); // Refresh every 30 seconds
       </script>
     </body>
     </html>
   `);
+  
+  // Start generating QR codes periodically with a default className
+  generateQRCodePeriodically(''); // Start generating QR codes periodically without className
 });
 
 // Endpoint to generate QR code based on class name
@@ -397,11 +401,16 @@ app.post('/submit', async (req, res) => {
 });
 
 // Function to periodically generate new QR code
-function generateQRCodePeriodically() {
-  setInterval(() => {
+// Function to periodically generate new QR code
+function generateQRCodePeriodically(className = '') {
+  setInterval(async () => {
     qrCodeCounter++;
     console.log(`QR code counter updated to: ${qrCodeCounter}`);
-    generateQRCode(); // Generate QR code without sending a response
+    try {
+      await generateQRCode(className); // Generate QR code with className
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+    }
   }, 30000); // Generate a new QR code every 30 seconds
 }
 
