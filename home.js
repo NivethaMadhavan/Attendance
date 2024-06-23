@@ -66,7 +66,7 @@ app.get('/', (req, res) => {
 
 // Route to redirect to Teacher Dashboard
 app.get('/teacher-dashboard', (req, res) => {
-  res.redirect(`http://0.0.0.0:${teacherPort}/teacher-dashboard`);
+  res.redirect(`/teacher-dashboard`);
 });
 
 // Start the server
