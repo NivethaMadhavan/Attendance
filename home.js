@@ -30,7 +30,7 @@ client.connect()
   .catch(err => console.error('Error connecting to the database:', err));
 
 // Function to generate the QR code
-async function generateQRCode(className = '') {
+async function generateQRCode(className = '', res = null, req = null) {
   const randomComponent = Math.floor(Math.random() * 1000);
   const timestamp = new Date().getTime();
   const cloudURL = `https://attendance-4au9.onrender.com/submit`;
@@ -70,11 +70,11 @@ async function generateQRCode(className = '') {
             </body>
             </html>
           `);
+          resolve(); // Ensure the Promise is resolved
         } else {
           resolve(qrCode);
         }
       }
-
     });
   });
 }
