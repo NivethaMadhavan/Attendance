@@ -119,12 +119,6 @@ app.get('/', (req, res) => {
 // Route to redirect to Teacher Dashboard
 app.get('/teacher-dashboard', (req, res) => {
   // Replace with actual class list retrieval logic if needed
-  const classes = ['Class A', 'Class B', 'Class C'];
-
-  let classButtons = classes.map(className => 
-    <button class="btn" onclick="generateQRCode('${className}')">Generate QR for ${className}</button>
-  ).join('');
-
   res.send(`
     <!DOCTYPE html>
 <html lang="en">
