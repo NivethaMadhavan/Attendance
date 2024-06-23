@@ -381,6 +381,7 @@ app.post('/submit', async (req, res) => {
       }
     } else {
       res.send('Form submission rejected: QR code mismatch');
+      console.log(`Reacieved qr code : "${requestedQrCode}", Current qr code : "${qrCodeCounter}"`);
     }
   } catch (error) {
     console.error('Error processing form submission:', error);
