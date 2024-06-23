@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const { Client } = require('pg');
 
 const app = express();
-let port = parseInt(process.env.PORT, 10) || 10001; // Port for the teacher service
+let port = 10001; // Port for the teacher service
 const qrPort = process.env.QR_PORT || 10000; // Port for the QR generation service
 
 const connectionString = process.env.DATABASE_URL;
