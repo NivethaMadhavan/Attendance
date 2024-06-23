@@ -2,13 +2,11 @@ const express = require('express');
 const qr = require('qrcode');
 const bodyParser = require('body-parser');
 const { Client } = require('pg');
-const ip = require('ip');
 
 const app = express();
 let port = parseInt(process.env.PORT, 10) || 10001; // Port for the teacher service
 const qrPort = process.env.QR_PORT || 10000; // Port for the QR generation service
 
-const localip = ip.address();
 const connectionString = process.env.DATABASE_URL;
 
 const client = new Client({
@@ -121,7 +119,7 @@ app.get('/teacher-dashboard', (req, res) => {
         <div class="btn-container">
           <button class="btn" onclick="generateQRCode('ClassA')">Generate QR for Class A</button>
           <button class="btn" onclick="generateQRCode('ClassB')">Generate QR for Class B</button>
-          <a href="http://${localip}:${qrPort}/" class="btn" target="_blank">QR Generation</a>
+          <a href="https://attendance-4au9.onrender.com:${qrPort}/" class="btn" target="_blank">QR Generation</a>
         </div>
         <div class="qr-code" id="qrCodeContainer">
           <!-- QR code will be inserted here -->
