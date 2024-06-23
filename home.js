@@ -89,7 +89,7 @@ app.get('/teacher-dashboard', (req, res) => {
         <div class="btn-container">
           <button class="btn" onclick="generateQRCode('ClassA')">Generate QR for Class A</button>
           <button class="btn" onclick="generateQRCode('ClassB')">Generate QR for Class B</button>
-          <a href="https://attendance-4au9.onrender.com:${qrPort}/" class="btn" target="_blank">QR Generation</a>
+          <a href="/qr-code" class="btn" target="_blank">QR Generation</a>
         </div>
         <div class="qr-code" id="qrCodeContainer">
           <!-- QR code will be inserted here -->
@@ -119,6 +119,14 @@ app.get('/teacher-dashboard', (req, res) => {
   `);
 });
 
+app.get('/qr-code', (req, res) => {
+  
+
+
+
+
+
+  
 // Start the server
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running at http://0.0.0.0:${port}`);
