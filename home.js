@@ -179,7 +179,6 @@ app.get('/teacher-dashboard', (req, res) => {
             .then(data => {
               const img = document.createElement('img');
               img.src = data.qrCode;
-              img.alt = `QR Code for "${className}"`;
               document.getElementById('qrCodeContainer').innerHTML = ''; // Clear previous QR code
               document.getElementById('qrCodeContainer').appendChild(img);
               currentClassName = className; // Update current class name
