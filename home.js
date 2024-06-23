@@ -107,7 +107,7 @@ app.get('/latest-qr-code', async (req, res) => {
       <body>
         <img src="${qrCode}?cb=${new Date().getTime()}" alt="QR Code ${qrCodeCounter}" />
         <script>
-          setTimeout(() => { window.location.reload() }, 40000); // Reload every 40 seconds
+          setTimeout(() => { window.location.reload() }, 30000); // Reload every 40 seconds
         </script>
       </body>
       </html>
@@ -188,7 +188,8 @@ app.get('/teacher-dashboard', (req, res) => {
       <div class="container">
         <h1>Teacher Dashboard</h1>
         <div class="btn-container">
-          ${classButtons}
+          <button class="btn" onclick="generateQRCode('ClassA')">Generate QR for Class A</button>
+          <button class="btn" onclick="generateQRCode('ClassB')">Generate QR for Class B</button>
           <a href="/qr-code" class="btn" target="_blank">QR Generation</a>
         </div>
         <div class="qr-code" id="qrCodeContainer">
