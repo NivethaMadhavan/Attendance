@@ -31,57 +31,24 @@ client.connect()
 
 // Function to generate the QR code
 // Function to generate the QR code
-async function generateQRCode(className = '', res = null, req = null) {
+async function generateQRCode(className = '') {
   const randomComponent = Math.floor(Math.random() * 1000);
   const timestamp = new Date().getTime();
   const cloudURL = `https://attendance-4au9.onrender.com/submit`;
-  const qrCodeData = `${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}&class=${className}`;
+  const qrCodeData = `${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}&className=${className}`;
 
   return new Promise((resolve, reject) => {
     qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
       if (err) {
         console.error('Error generating QR code:', err);
-        if (res) {
-          res.status(500).send('Internal Server Error');
-        }
         reject(err);
       } else {
         console.log(`Generated QR code with data: ${qrCodeData}`);
-        if (res) {
-          res.send(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>QR Code</title>
-            </head>
-            <body>
-              <h1>Scan the QR code</h1>
-              <img id="qrCodeImage" src="${qrCode}" alt="QR Code">
-              <script>
-                function fetchNewQRCode() {
-                  fetch('/new-qrcode')
-                    .then(response => response.json())
-                    .then(data => {
-                      document.getElementById('qrCodeImage').src = data.qrCodeData;
-                    })
-                    .catch(error => console.error('Error fetching new QR code:', error));
-                }
-                setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
-                fetchNewQRCode(); // Initial fetch
-              </script>
-            </body>
-            </html>
-          `);
-        } else {
-          resolve(qrCode);
-        }
+        resolve(qrCode);
       }
     });
   });
 }
-
 
 // Endpoint to generate the QR code for the home page
 // Route to the home page
@@ -120,47 +87,70 @@ app.get('/teacher-dashboard', (req, res) => {
 
   res.send(`
     <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Teacher Dashboard</title>
-      <style>
-        /* Your existing styles */
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h1>Teacher Dashboard</h1>
-        <div class="btn-container">
-          ${classButtons}
-          <a href="/qr-code" class="btn" target="_blank">QR Generation</a>
-        </div>
-        <div class="qr-code" id="qrCodeContainer">
-          <!-- QR code will be inserted here -->
-        </div>
-      </div>
-      <script>
-        function generateQRCode(className) {
-          fetch('/generate-qr', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ className: className })
-          })
-          .then(response => response.json())
-          .then(data => {
-            const img = document.createElement('img');
-            img.src = data.qrCode;
-            document.getElementById('qrCodeContainer').innerHTML = ''; // Clear previous QR code
-            document.getElementById('qrCodeContainer').appendChild(img);
-          })
-          .catch(error => console.error('Error generating QR code:', error));
-        }
-      </script>
-    </body>
-    </html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Dashboard</title>
+  <style>
+    .container {
+      text-align: center;
+    }
+    .btn-container {
+      margin: 20px;
+    }
+    .btn {
+      padding: 10px 20px;
+      background-color: #5F7DEF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px;
+      text-decoration: none;
+    }
+    .btn:hover {
+      background-color: #3e4093;
+    }
+    .qr-code {
+      margin: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Teacher Dashboard</h1>
+    <div class="btn-container">
+      <button class="btn" onclick="generateQRCode('ClassA')">Generate QR for Class A</button>
+      <button class="btn" onclick="generateQRCode('ClassB')">Generate QR for Class B</button>
+      <a href="/qr-code" class="btn" target="_blank">QR Generation</a>
+    </div>
+    <div class="qr-code" id="qrCodeContainer">
+      <!-- QR code will be inserted here -->
+    </div>
+  </div>
+  <script>
+    function generateQRCode(className) {
+      fetch('/generate-qr', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ className: className })
+      })
+      .then(response => response.json())
+      .then(data => {
+        const img = document.createElement('img');
+        img.src = data.qrCode;
+        document.getElementById('qrCodeContainer').innerHTML = ''; // Clear previous QR code
+        document.getElementById('qrCodeContainer').appendChild(img);
+      })
+      .catch(error => console.error('Error generating QR code:', error));
+    }
+  </script>
+</body>
+</html>
+
   `);
 });
 
@@ -175,16 +165,17 @@ app.post('/generate-qr', async (req, res) => {
     const tableName = `Department_${className}_${formattedTimestamp}`; // Format: Department_ClassName_YYYY-MM-DDTHH-MM-SS
 
     // Create a new table for the class session
+  const createTableIfNotExists = async (tableName) => {
     const createTableQuery = `
-      CREATE TABLE "${tableName}" (
+      CREATE TABLE IF NOT EXISTS "${tableName}" (
         id SERIAL PRIMARY KEY,
-        name VARCHAR(100),
-        usn VARCHAR(100),
-        device_fingerprint VARCHAR(100),
-        submission_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        name VARCHAR(255),
+        usn VARCHAR(255),
+        device_fingerprint VARCHAR(255)
       )
     `;
-    await client.query(createTableQuery);
+     await client.query(createTableQuery);
+    };
 
     // Generate the QR code with the table name
     const qrCodeData = await generateQRCode(null, { query: { qrcode: qrCodeCounter } });
