@@ -6,6 +6,11 @@ let Tport = parseInt(process.env.PORT, 10) || 10001; // Port for teacher.js
 let qrPort = parseInt(process.env.PORT, 10) || 10000; // Port for QR code generation
 let port = parseInt(process.env.PORT, 10) || 10002; // home.js
 
+if (port < 0 || port > 65535) {
+  console.error(`Invalid port number: ${port}. Falling back to default port 10000.`);
+  port = 10000;
+}
+
 // Route to the home page
 app.get('/', (req, res) => {
   res.send(`
