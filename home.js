@@ -124,34 +124,35 @@ app.get('/teacher-dashboard', (req, res) => {
         </div>
       </div>
       <script>
-        function startQRCodeGeneration(className) {
-          fetch('/start-qr-generation', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ className: className })
-          })
-          .then(response => response.text())
-          .then(message => {
-            console.log(message);
-            fetchLatestQRCode(className);
-            // Periodically fetch the latest QR code
-            setInterval(() => fetchLatestQRCode(className), 30000);
-          })
-          .catch(error => console.error('Error starting QR code generation:', error));
-        }
+  function startQRCodeGeneration(className) {
+    fetch('/start-qr-generation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ className: className })
+    })
+    .then(response => response.text())
+    .then(message => {
+      console.log(message);
+      fetchLatestQRCode(className);
+      // Periodically fetch the latest QR code
+      setInterval(() => fetchLatestQRCode(className), 30000);
+    })
+    .catch(error => console.error('Error starting QR code generation:', error));
+  }
 
-        function fetchLatestQRCode(className) {
-          fetch(`/latest-qr-code/${className}`)
-            .then(response => response.text())
-            .then(qrCode => {
-              const qrCodeContainer = document.getElementById('qrCodeContainer');
-              qrCodeContainer.innerHTML = \`<img src="\${qrCode}" alt="QR Code for \${className}" />\`;
-            })
-            .catch(error => console.error('Error fetching latest QR code:', error));
-        }
-      </script>
+  function fetchLatestQRCode(className) {
+    fetch(`/latest-qr-code/${className}`)
+      .then(response => response.text())
+      .then(qrCode => {
+        const qrCodeContainer = document.getElementById('qrCodeContainer');
+        qrCodeContainer.innerHTML = `<img src="${qrCode}" alt="QR Code for ${className}" />`;
+      })
+      .catch(error => console.error('Error fetching latest QR code:', error));
+  }
+</script>
+
     </body>
     </html>`
   );
