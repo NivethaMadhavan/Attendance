@@ -1,9 +1,9 @@
 const express = require('express');
 const app = express();
 
-// Define ports for each service
-const teacherPort = 10001; // Port defined in teacher.js
-const qrPort = 10000; // Port defined in index.js
+// Use environment variables or default values
+const teacherPort = process.env.TEACHER_PORT || 10001; // Port for teacher.js
+const qrPort = process.env.QR_PORT || 10000; // Port for index.js
 
 // Route to the home page
 app.get('/', (req, res) => {
@@ -70,8 +70,7 @@ app.get('/teacher-dashboard', (req, res) => {
 });
 
 // Start the server
-const port = 10002; // Choose a port for the home page
+const port = process.env.PORT || 10002; // Use the PORT environment variable
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running at http://0.0.0.0:${port}`);
-
 });
