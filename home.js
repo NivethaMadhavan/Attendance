@@ -3,7 +3,6 @@ const qr = require('qrcode');
 const bodyParser = require('body-parser');
 const { Client } = require('pg');
 const ip = require('ip');
-const FingerprintJS = require('@fingerprintjs/fingerprintjs');
 
 const app = express();
 let port = parseInt(process.env.PORT, 10) || 10000; // Default to 10000 if PORT is not set or invalid
@@ -34,13 +33,13 @@ client.connect()
 async function generateQRCode(className = '') {
   const randomComponent = Math.floor(Math.random() * 1000);
   const timestamp = new Date().getTime();
-  const cloudURL = "https://attendance-4au9.onrender.com/submit";
+  const cloudURL = `https://attendance-4au9.onrender.com/submit`;
   const qrCodeData = `${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}&className=${className}`;
 
   return new Promise((resolve, reject) => {
     qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
       if (err) {
-        console.error('Error generating QR code:', err);
+        console.error(`Error generating QR code:`, err);
         reject(err);
       } else {
         console.log(`Generated QR code with data: ${qrCodeData}`);
@@ -50,115 +49,8 @@ async function generateQRCode(className = '') {
   });
 }
 
-let qrIntervals = {};
-let latestQRCodes = {};
-
-app.post('/start-qr-generation', async (req, res) => {
-  const className = req.body.className;
-
-  // Clear any existing interval for this class
-  if (qrIntervals[className]) {
-    clearInterval(qrIntervals[className]);
-  }
-
-  // Start generating new QR codes every 30 seconds
-  qrIntervals[className] = setInterval(async () => {
-    qrCodeCounter++;
-    const qrCode = await generateQRCode(className);
-    latestQRCodes[className] = qrCode;
-    console.log(`QR code counter updated to: ${qrCodeCounter} for class: ${className}`);
-  }, 30000);
-
-  res.send(`Started generating QR codes for class ${className}`);
-});
-
-app.get('/latest-qr-code/:className', async (req, res) => {
-  const className = req.params.className;
-  const qrCode = latestQRCodes[className];
-  if (qrCode) {
-    res.send(qrCode);
-  } else {
-    res.status(404).send('QR code not found for the specified class');
-  }
-});
-
-app.get('/', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Home</title>
-    </head>
-    <body>
-      <div class="container">
-        <h1>Welcome to Home</h1>
-        <div class="btn-container">
-          <a href="/teacher-dashboard" class="btn">Teacher Dashboard</a>
-        </div>
-      </div>
-    </body>
-    </html>`
-  );
-});
-
-app.get('/teacher-dashboard', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Teacher Dashboard</title>
-    </head>
-    <body>
-      <div class="container">
-        <h1>Teacher Dashboard</h1>
-        <div class="btn-container">
-          <button class="btn" onclick="startQRCodeGeneration('ClassA')">Generate QR for Class A</button>
-          <button class="btn" onclick="startQRCodeGeneration('ClassB')">Generate QR for Class B</button>
-        </div>
-        <div class="qr-code" id="qrCodeContainer">
-          <!-- QR code will be inserted here -->
-        </div>
-      </div>
-      <script>
-  function startQRCodeGeneration(className) {
-    fetch('/start-qr-generation', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ className: className })
-    })
-    .then(response => response.text())
-    .then(message => {
-      console.log(message);
-      fetchLatestQRCode(className);
-      // Periodically fetch the latest QR code
-      setInterval(() => fetchLatestQRCode(className), 30000);
-    })
-    .catch(error => console.error('Error starting QR code generation:', error));
-  }
-
-  function fetchLatestQRCode(className) {
-    fetch(`/latest-qr-code/"${className}"`)
-      .then(response => response.text())
-      .then(qrCode => {
-        const qrCodeContainer = document.getElementById('qrCodeContainer');
-        qrCodeContainer.innerHTML = `<img src="${qrCode}" alt="QR Code for ${className}" />`;
-      })
-      .catch(error => console.error('Error fetching latest QR code:', error));
-  }
-</script>
-
-    </body>
-    </html>`
-  );
-});
-
-app.get('/qr-code', async (req, res) => {
+// Endpoint to serve the latest QR code image
+app.get('/latest-qr-code', async (req, res) => {
   try {
     const qrCode = await generateQRCode();
     res.send(`
@@ -168,45 +60,183 @@ app.get('/qr-code', async (req, res) => {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Latest QR Code</title>
+        <style>
+          body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+          }
+          img {
+            border: 2px solid #000;
+            padding: 10px;
+            background-color: #fff;
+          }
+        </style>
       </head>
       <body>
-        <div class="qr-code">
-          <img src="${qrCode}" alt="QR Code ${qrCodeCounter}" />
-        </div>
+        <img src="${qrCode}" alt="QR Code ${qrCodeCounter}" />
+        <script>
+          setTimeout(() => { window.location.reload() }, 30000); // Reload every 30 seconds
+        </script>
       </body>
-      </html>`
-    );
+      </html>
+    `);
   } catch (error) {
-    console.error('Error generating QR code:', error);
+    console.error(`Error generating QR code:`, error);
     res.status(500).send('Internal Server Error');
   }
 });
 
+// Endpoint to generate the QR code for the home page
+app.get('/', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Home</title>
+      <style>
+        /* Your existing styles */
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>Welcome to Home</h1>
+        <div class="btn-container">
+          <a href="/teacher-dashboard" class="btn">Teacher Dashboard</a>
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+// Route to redirect to Teacher Dashboard
+app.get('/teacher-dashboard', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Teacher Dashboard</title>
+      <style>
+        .container {
+          text-align: center;
+        }
+        .btn-container {
+          margin: 20px;
+        }
+        .btn {
+          padding: 10px 20px;
+          background-color: #5F7DEF;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          margin: 10px;
+          text-decoration: none;
+        }
+        .btn:hover {
+          background-color: #3e4093;
+        }
+        .qr-code {
+          margin: 20px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>Teacher Dashboard</h1>
+        <div class="btn-container">
+          <button class="btn" onclick="generateQRCode('ClassA')">Generate QR for Class A</button>
+          <button class="btn" onclick="generateQRCode('ClassB')">Generate QR for Class B</button>
+          <a href="/qr-code" class="btn" target="_blank">QR Generation</a>
+        </div>
+        <div class="qr-code" id="qrCodeContainer">
+          <!-- QR code will be inserted here -->
+        </div>
+      </div>
+      <script>
+        function generateQRCode(className) {
+          fetch('/generate-qr', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ className: className })
+          })
+          .then(response => response.json())
+          .then(data => {
+            const img = document.createElement('img');
+            img.src = data.qrCode;
+            document.getElementById('qrCodeContainer').innerHTML = ''; // Clear previous QR code
+            document.getElementById('qrCodeContainer').appendChild(img);
+          })
+          .catch(error => console.error('Error generating QR code:', error));
+        }
+
+        // Call generateQRCode initially to load the initial QR code
+        generateQRCode();
+
+        // Set up interval to refresh QR code every 30 seconds
+        setInterval(() => {
+          generateQRCode(); // Fetch and update QR code
+        }, 30000); // Refresh every 30 seconds
+      </script>
+    </body>
+    </html>
+  `);
+});
+
+// Endpoint to generate QR code based on class name
+app.post('/generate-qr', async (req, res) => {
+  try {
+    const className = req.body.className; // Get class name from request body
+    const qrCodeData = await generateQRCode(className); // Call function to generate QR code with className
+    res.json({ qrCode: qrCodeData }); // Send generated QR code as JSON response
+  } catch (error) {
+    console.error(`Error generating QR code:`, error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Endpoint to generate the QR code for the QR code page
+app.get('/qr-code', async (req, res) => {
+  try {
+    console.log('Generating QR code for QR code page');
+    await generateQRCode(res, req);
+  } catch (error) {
+    console.error(`Error generating QR code:`, error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Endpoint to fetch a new QR code
 app.get('/new-qrcode', async (req, res) => {
   try {
-    const qrCodeData = await generateQRCode();
+    console.log('Generating new QR code');
+    const qrCodeData = await generateQRCode(null, req);
     res.json({ qrCodeData });
   } catch (error) {
-    console.error('Error generating new QR code:', error);
+    console.error(`Error generating new QR code:`, error);
     res.status(500).send('Internal Server Error');
   }
 });
 
+// Endpoint to handle the QR code validation and show the form
 app.get('/submit', async (req, res) => {
   try {
     const requestedQrCode = parseInt(req.query.qrcode);
-    const className = req.query.className;
-    const timestampPart = req.query.timestamp.split('_')[0];
-    const timestamp = parseInt(timestampPart);
+    const className = req.query.className; // Get className from query
 
-    const currentTime = new Date().getTime();
-    const isValidTime = currentTime - timestamp <= 30000; // 30 seconds
-
-    if (qrCodeCounter === requestedQrCode && isValidTime) {
-      const fpPromise = await FingerprintJS.load();
-      const fpInstance = await fpPromise.get();
-      const clientFingerprint = fpInstance.visitorId;
-
+    if (qrCodeCounter !== requestedQrCode) {
+      res.send('Rejected');
+      console.log(`Received qr code : "${requestedQrCode}", Current qr code : "${qrCodeCounter}"`);
+    } else {
       res.send(`
         <!DOCTYPE html>
         <html lang="en">
@@ -214,9 +244,76 @@ app.get('/submit', async (req, res) => {
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Attendance</title>
+          <link rel="icon" href="letter_logo.png" type="image/x-icon">
+          <style>
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              background-color: teal;
+              background-size: contain;
+              background-image: url("hire_now_bg.jpg") fixed;
+              background-position: center;
+              margin: 0;
+              padding: 0;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+              color: navy;
+            }
+            h2 {
+              color: white;
+              font-weight: 700;
+              font-size: 28px;
+              text-align: center;
+            }
+            form {
+              backdrop-filter: blur(100px);
+              padding: 20px;
+              padding-right: 70px;
+              padding-left: 50px;
+              box-shadow: 0px 4px 6px #38497C;
+              border-radius: 15px;
+              width: 500px;
+            }
+            label {
+              display: block;
+              margin-bottom: 10px;
+              color: black;
+              font-size: 22px;
+            }
+            input, textarea {
+              width: 100%;
+              padding: 10px;
+              margin-bottom: 15px;
+              border: none;
+              border-radius: 8px;
+              background: rgba(255, 255, 255, 0.1);
+              color: black;
+            }
+            input {
+              height: 40px;
+            }
+            textarea {
+              height: 110px;
+            }
+            button {
+              background-color: #5F7DEF;
+              color: black;
+              padding: 10px 15px;
+              border: none;
+              border-radius: 8px;
+              cursor: pointer;
+              transition: background-color 0.3s ease;
+            }
+            button:hover {
+              background-color: #3e4093;
+              color: white;
+            }
+          </style>
+          <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
         </head>
         <body>
-          <form id="attendanceForm" action="/submit" method="post">
+          <form id="hire_now" action="/submit" method="post">
             <h2>Accepted! Enter details:</h2>
             <label for="name">Your Name:</label>
             <input type="text" id="name" name="name" required>
@@ -224,18 +321,25 @@ app.get('/submit', async (req, res) => {
             <input type="text" id="usn" name="usn" required>
             <input type="hidden" id="qrcode" name="qrcode" value="${requestedQrCode}">
             <input type="hidden" id="className" name="className" value="${className}">
-            <input type="hidden" id="clientFingerprint" name="clientFingerprint" value="${clientFingerprint}">
+            <input type="hidden" id="clientFingerprint" name="clientFingerprint">
             <button type="submit">Submit</button>
           </form>
+          <script>
+            // JavaScript to fetch and set the client fingerprint
+            // Using FingerprintJS library
+            FingerprintJS.load().then(fp => {
+              fp.get().then(result => {
+                const visitorId = result.visitorId;
+                document.getElementById('clientFingerprint').value = visitorId;
+              });
+            });
+          </script>
         </body>
-        </html>`
-      );
-    } else {
-      res.send('Rejected');
-      console.log(`Received qr code: "${requestedQrCode}", Current qr code: "${qrCodeCounter}", Valid time: ${isValidTime}`);
+        </html>
+      `);
     }
   } catch (error) {
-    console.error('Error generating form page:', error);
+    console.error(`Error generating form page:`, error);
     res.status(500).send('Internal Server Error');
   }
 });
@@ -251,49 +355,59 @@ app.post('/submit', async (req, res) => {
     const tableName = `Department_${className}_${formattedTimestamp}`;
 
     if (!clientFingerprint) {
-      throw new Error('Client fingerprint is missing.');
+      res.status(400).send('Bad Request: Missing client fingerprint');
+      return;
     }
 
-    // Verify the QR code and time validity
-    const currentTime = new Date().getTime();
-    const isValidTime = currentTime - timestamp <= 30000; // 30 seconds
-
-    if (qrCodeCounter === requestedQrCode && isValidTime) {
-      const fpPromise = await FingerprintJS.load();
-      const fpInstance = await fpPromise.get();
-      const serverFingerprint = fpInstance.visitorId;
-
-      // Compare client and server fingerprints for verification
-      if (clientFingerprint !== serverFingerprint) {
-        throw new Error('Client fingerprint does not match server fingerprint.');
-      }
-
+    if (qrCodeCounter === requestedQrCode) {
       // Create the table if it doesn't exist
-      const createTableQuery = 
-        `CREATE TABLE IF NOT EXISTS "${tableName}" (
+      const createTableQuery = `
+        CREATE TABLE IF NOT EXISTS "${tableName}" (
           id SERIAL PRIMARY KEY,
           name VARCHAR(255),
-          usn VARCHAR(255)
-        )`
-      ;
+          usn VARCHAR(255),
+          device_fingerprint VARCHAR(255)
+        )
+      `;
       await client.query(createTableQuery);
 
-      // Insert data into the table
-      const insertQuery = `INSERT INTO "${tableName}" (name, usn) VALUES ($1, $2)`;
-      await client.query(insertQuery, [name, usn]);
+      // Check if the fingerprint is already in the table
+      const checkQuery = `
+        SELECT COUNT(*) AS count FROM "${tableName}" WHERE device_fingerprint = $1
+      `;
+      const checkResult = await client.query(checkQuery, [clientFingerprint]);
 
-      res.send('Attendance submitted successfully.');
+      if (checkResult.rows[0].count > 0) {
+        res.send('Form submission rejected: Fingerprint already submitted');
+      } else {
+        const insertQuery = `
+          INSERT INTO "${tableName}" (name, usn, device_fingerprint) VALUES ($1, $2, $3)
+        `;
+        await client.query(insertQuery, [name, usn, clientFingerprint]);
+        res.send('Form submitted successfully');
+      }
     } else {
-      res.status(403).send('Attendance submission failed. Invalid QR code or time exceeded.');
-      console.log(`Received qr code: "${requestedQrCode}", Current qr code: "${qrCodeCounter}", Valid time: ${isValidTime}`);
+      res.send('Form submission rejected: QR code mismatch');
+      console.log(`Received qr code : "${requestedQrCode}", Current qr code : "${qrCodeCounter}"`);
     }
   } catch (error) {
-    console.error('Error submitting attendance:', error);
+    console.error(`Error processing form submission:`, error);
     res.status(500).send('Internal Server Error');
   }
 });
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Server running on http://${localip}:${port}`);
+// Function to periodically generate new QR code
+function generateQRCodePeriodically() {
+  setInterval(() => {
+    qrCodeCounter++;
+    console.log(`QR code counter updated to: ${qrCodeCounter}`);
+    generateQRCode(); // Generate QR code without sending a response
+  }, 30000); // Generate a new QR code every 30 seconds
+}
+
+// Start the periodic QR code generation
+generateQRCodePeriodically();
+
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server is running on http://0.0.0.0:${port}`);
 });
