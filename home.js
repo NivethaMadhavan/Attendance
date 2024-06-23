@@ -44,6 +44,9 @@ async function generateQRCode(className = '') {
       } else {
         console.log(`Generated QR code with data: ${qrCodeData}`);
         resolve(qrCode);
+        // Start the periodic QR code generation
+        generateQRCodePeriodically(className);
+
       }
     });
   });
@@ -397,16 +400,13 @@ app.post('/submit', async (req, res) => {
 });
 
 // Function to periodically generate new QR code
-function generateQRCodePeriodically() {
+function generateQRCodePeriodically(className=' ') {
   setInterval(() => {
     qrCodeCounter++;
     console.log(`QR code counter updated to: ${qrCodeCounter}`);
     generateQRCode(); // Generate QR code without sending a response
   }, 30000); // Generate a new QR code every 30 seconds
 }
-
-// Start the periodic QR code generation
-generateQRCodePeriodically();
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on http://0.0.0.0:${port}`);
