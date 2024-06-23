@@ -50,6 +50,7 @@ async function generateQRCode(className = '') {
 }
 
 
+
 // Endpoint to serve the latest QR code image
 app.get('/latest-qr-code', async (req, res) => {
   try {
