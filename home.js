@@ -43,8 +43,38 @@ async function generateQRCode(className = '') {
         reject(err);
       } else {
         console.log(`Generated QR code with data: ${qrCodeData}`);
-        resolve(qrCode);
+        if (res) {
+          res.send(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>QR Code</title>
+            </head>
+            <body>
+              <h1>Scan the QR code</h1>
+              <img id="qrCodeImage" src="${qrCode}" alt="QR Code">
+              <script>
+                function fetchNewQRCode() {
+                  fetch('/new-qrcode')
+                    .then(response => response.json())
+                    .then(data => {
+                      document.getElementById('qrCodeImage').src = data.qrCodeData;
+                    })
+                    .catch(error => console.error('Error fetching new QR code:', error));
+                }
+                setInterval(fetchNewQRCode, 30000); // Fetch a new QR code every 30 seconds
+                fetchNewQRCode(); // Initial fetch
+              </script>
+            </body>
+            </html>
+          `);
+        } else {
+          resolve(qrCode);
+        }
       }
+
     });
   });
 }
