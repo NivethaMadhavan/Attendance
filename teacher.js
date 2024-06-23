@@ -7,6 +7,11 @@ const app = express();
 let port = parseInt(process.env.PORT, 10) || 10001; // Port for teacher.js
 let qrPort = parseInt(process.env.PORT, 10) || 10000;; // Port for QR code generation
 
+if (port < 0 || port > 65535) {
+  console.error(`Invalid port number: ${port}. Falling back to default port 10001.`);
+  port = 10001;
+}
+
 const connectionString = process.env.DATABASE_URL;
 
 const client = new Client({
