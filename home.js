@@ -50,6 +50,46 @@ async function generateQRCode(className = '') {
   });
 }
 
+app.get('/latest-qr-code', async (req, res) => {
+  try {
+    const qrCode = await generateQRCode();
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Latest QR Code</title>
+        <style>
+          body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+          }
+          img {
+            border: 2px solid #000;
+            padding: 10px;
+            background-color: #fff;
+          }
+        </style>
+      </head>
+      <body>
+        <img src="${qrCode}" alt="QR Code ${qrCodeCounter}" />
+        <script>
+          setTimeout(() => { window.location.reload() }, 40000); // Reload every 40 seconds
+        </script>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error('Error generating QR code:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+
 // Endpoint to generate the QR code for the home page
 // Route to the home page
 app.get('/', (req, res) => {
