@@ -35,7 +35,7 @@ async function generateQRCode(className = '') {
   const randomComponent = Math.floor(Math.random() * 1000);
   const timestamp = new Date().getTime();
   const cloudURL = "https://attendance-4au9.onrender.com/submit";
-  const qrCodeData = "${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}&className=${className}";
+  const qrCodeData = `${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}&className=${className}`;
 
   return new Promise((resolve, reject) => {
     qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
@@ -400,5 +400,5 @@ function generateQRCodePeriodically() {
 generateQRCodePeriodically();
 
 app.listen(port, '0.0.0.0', () => {
-  console.log('Server is running on http://0.0.0.0:${port}');
+  console.log(`Server is running on http://0.0.0.0:${port}`);
 });
