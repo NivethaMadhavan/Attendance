@@ -4,6 +4,7 @@ const app = express();
 // Define ports for each service
 const teacherPort = 10001; // Port defined in teacher.js
 const qrPort = 10000; // Port defined in index.js
+const port = 100002; //Port for homepage
 
 // Route to the home page
 app.get('/', (req, res) => {
@@ -66,12 +67,12 @@ app.get('/', (req, res) => {
 
 // Route to redirect to Teacher Dashboard
 app.get('/teacher-dashboard', (req, res) => {
-  res.redirect(`http://localhost:${teacherPort}/teacher-dashboard`);
+  res.redirect(`http://0.0.0.0:${teacherPort}/teacher-dashboard`);
 });
 
 // Start the server
 const port = 3000; // Choose a port for the home page
 app.listen(port, '0.0.0.0', () => {
-  console.log(`Server is running at http://0.0.0.0:${qrPort}`);
+  console.log(`Server is running at http://0.0.0.0:${Port}`);
 
 });
