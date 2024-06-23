@@ -5,7 +5,8 @@ const { Client } = require('pg');
 const ip = require('ip');
 
 const app = express();
-let port = parseInt(process.env.PORT, 10) || 10001; // Use a different port if running simultaneously with another service
+let port = parseInt(process.env.PORT, 10) || 10001; // Port for the teacher service
+const qrPort = process.env.QR_PORT || 10000; // Port for the QR generation service
 
 const localip = ip.address();
 const connectionString = process.env.DATABASE_URL;
@@ -38,6 +39,24 @@ async function generateQRCode(sessionData) {
     });
   });
 }
+
+// Endpoint to handle QR code generation requests
+app.post('/generate-qr', async (req, res) => {
+  try {
+    const className = req.body.className;
+    const sessionData = {
+      qrCodeCounter: Math.floor(Math.random() * 10000), // Example data, replace with actual logic
+      className: className,
+      date: new Date().toISOString().split('T')[0], // Current date
+      time: new Date().toISOString().split('T')[1].split('.')[0] // Current time
+    };
+    const qrCode = await generateQRCode(sessionData);
+    res.json({ qrCode });
+  } catch (error) {
+    console.error('Error generating QR code:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
 
 // Route for the Teacher Dashboard
 app.get('/teacher-dashboard', (req, res) => {
@@ -133,6 +152,6 @@ app.get('/teacher-dashboard', (req, res) => {
 });
 
 // Start the server
-app.listen(port, () => {
-  console.log(`Teacher service is running on http://${localip}:${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Teacher server is running at http://0.0.0.0:${port}`);
 });
