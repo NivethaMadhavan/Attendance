@@ -78,7 +78,7 @@ app.get('/latest-qr-code', async (req, res) => {
       <body>
         <img src="${qrCode}" alt="QR Code ${qrCodeCounter}" />
         <script>
-          setTimeout(() => { window.location.reload() }, 40000); // Reload every 40 seconds
+          setTimeout(() => { window.location.reload() }, 30000); // Reload every 30 seconds
         </script>
       </body>
       </html>
