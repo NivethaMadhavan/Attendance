@@ -82,7 +82,8 @@ async function generateQRCode(res = null, req = null) {
 }
 
 // Endpoint to generate the QR code for the home page
-app.get('/', async (req, res) => {
+// Route to the home page
+app.get('/', (req, res) => {
   res.send(`
     <!DOCTYPE html>
     <html lang="en">
@@ -91,54 +92,82 @@ app.get('/', async (req, res) => {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Home</title>
       <style>
-        body {
-          font-family: Arial, sans-serif;
-          background-color: #f0f0f0;
-          padding: 20px;
-        }
-        .container {
-          max-width: 600px;
-          margin: auto;
-          background-color: #fff;
-          padding: 20px;
-          border-radius: 8px;
-          box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-          text-align: center;
-          color: #333;
-        }
-        .btn-container {
-          display: flex;
-          justify-content: center;
-          margin-top: 20px;
-        }
-        .btn {
-          margin: 0 10px;
-          padding: 10px 20px;
-          font-size: 16px;
-          background-color: #007bff;
-          color: #fff;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-        }
-        .btn:hover {
-          background-color: #0056b3;
-        }
+        /* Your existing styles */
       </style>
     </head>
     <body>
       <div class="container">
         <h1>Welcome to Home</h1>
         <div class="btn-container">
-          <a href="/qr-code" class="btn" target="_blank">QR Generation</a>
+          <a href="/teacher-dashboard" class="btn">Teacher Dashboard</a>
         </div>
       </div>
     </body>
     </html>
   `);
 });
+
+// Route to redirect to Teacher Dashboard
+app.get('/teacher-dashboard', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Teacher Dashboard</title>
+      <style>
+        /* Your existing styles */
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>Teacher Dashboard</h1>
+        <div class="btn-container">
+          <button class="btn" onclick="generateQRCode('ClassA')">Generate QR for Class A</button>
+          <button class="btn" onclick="generateQRCode('ClassB')">Generate QR for Class B</button>
+          <a href="/qr-code" class="btn" target="_blank">QR Generation</a>
+        </div>
+        <div class="qr-code" id="qrCodeContainer">
+          <!-- QR code will be inserted here -->
+        </div>
+      </div>
+      <script>
+        function generateQRCode(className) {
+          fetch('/generate-qr', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ className: className })
+          })
+          .then(response => response.json())
+          .then(data => {
+            const img = document.createElement('img');
+            img.src = data.qrCode;
+            document.getElementById('qrCodeContainer').innerHTML = ''; // Clear previous QR code
+            document.getElementById('qrCodeContainer').appendChild(img);
+          })
+          .catch(error => console.error('Error generating QR code:', error));
+        }
+      </script>
+    </body>
+    </html>
+  `);
+});
+
+// Endpoint to generate QR code based on class name
+app.post('/generate-qr', async (req, res) => {
+  try {
+    const className = req.body.className; // Get class name from request body
+    const qrCodeData = await generateQRCode(className); // Call function to generate QR code
+    res.json({ qrCode: qrCodeData }); // Send generated QR code as JSON response
+  } catch (error) {
+    console.error('Error generating QR code:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
 
 // Endpoint to generate the QR code for the home page
 app.get('/qr-code', async (req, res) => {
