@@ -4,7 +4,6 @@ const app = express();
 // Define ports for each service
 const teacherPort = 10001; // Port defined in teacher.js
 const qrPort = 10000; // Port defined in index.js
-const port = 100002; //Port for homepage
 
 // Route to the home page
 app.get('/', (req, res) => {
