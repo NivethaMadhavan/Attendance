@@ -66,7 +66,7 @@ app.get('/', (req, res) => {
 
 // Route to redirect to Teacher Dashboard
 app.get('/teacher-dashboard', (req, res) => {
-  res.redirect(`https://attendance-4au9.onrender.com:${teacherPort}/teacher-dashboard`);
+  res.redirect(`/teacher-dashboard`);
 });
 
 // Start the server
