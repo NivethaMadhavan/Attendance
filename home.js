@@ -66,11 +66,11 @@ app.get('/', (req, res) => {
 
 // Route to redirect to Teacher Dashboard
 app.get('/teacher-dashboard', (req, res) => {
-  res.redirect(`/teacher-dashboard`);
+  res.redirect(`http://${req.hostname}:${teacherPort}/teacher-dashboard`);
 });
 
 // Start the server
-const port = process.env.PORT || 10002; // Use the PORT environment variable
+const port = process.env.PORT || 10002; // Use the port provided by Render or default to 10002
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running at http://0.0.0.0:${port}`);
 });
