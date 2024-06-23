@@ -121,7 +121,7 @@ app.get('/', (req, res) => {
 });
 
 // Route to redirect to Teacher Dashboard
-app.get('/teacher-dashboard', (req, res) => {
+app.get('/teacher-dashboard', (req, res) => {`
   <!DOCTYPE html>
 <html lang="en">
 <head>
