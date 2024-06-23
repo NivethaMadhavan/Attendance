@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 
 // Use environment variables or default values
-const port = process.env.PORT || 10001; // Port for teacher.js
+const Tport = process.env.PORT || 10001; // Port for teacher.js
 const qrPort = process.env.DB_PORT || 10000; // Port for QR code generation
 const port = 10002; // home.js
 
