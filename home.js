@@ -9,7 +9,7 @@ let port = parseInt(process.env.PORT, 10) || 10000; // Default to 10000 if PORT 
 
 // Ensure the port is within the valid range
 if (port < 0 || port > 65535) {
-  console.error(Invalid port number: ${port}. Falling back to default port 10000.);
+  console.error(`Invalid port number: ${port}. Falling back to default port 10000.`);
   port = 10000;
 }
 
@@ -34,7 +34,7 @@ client.connect()
 async function generateQRCode(className = '') {
   const randomComponent = Math.floor(Math.random() * 1000);
   const timestamp = new Date().getTime();
-  const cloudURL = https://attendance-4au9.onrender.com/submit;
+  const cloudURL = "https://attendance-4au9.onrender.com/submit";
   const qrCodeData = ${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}&className=${className};
 
   return new Promise((resolve, reject) => {
@@ -43,7 +43,7 @@ async function generateQRCode(className = '') {
         console.error('Error generating QR code:', err);
         reject(err);
       } else {
-        console.log(Generated QR code with data: ${qrCodeData});
+        console.log('Generated QR code with data: ${qrCodeData}');
         resolve(qrCode);
       }
     });
@@ -53,7 +53,7 @@ async function generateQRCode(className = '') {
 app.get('/latest-qr-code', async (req, res) => {
   try {
     const qrCode = await generateQRCode();
-    res.send(
+    res.send(`
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -81,7 +81,7 @@ app.get('/latest-qr-code', async (req, res) => {
           setTimeout(() => { window.location.reload() }, 30000); // Reload every 30 seconds
         </script>
       </body>
-      </html>
+      </html>`
     );
   } catch (error) {
     console.error('Error generating QR code:', error);
@@ -93,7 +93,7 @@ app.get('/latest-qr-code', async (req, res) => {
 // Endpoint to generate the QR code for the home page
 // Route to the home page
 app.get('/', (req, res) => {
-  res.send(
+  res.send(`
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -112,7 +112,7 @@ app.get('/', (req, res) => {
         </div>
       </div>
     </body>
-    </html>
+    </html>`
   );
 });
 
@@ -125,7 +125,7 @@ app.get('/teacher-dashboard', (req, res) => {
     <button class="btn" onclick="generateQRCode('${className}')">Generate QR for ${className}</button>
   ).join('');
 
-  res.send(
+  res.send(`
     <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -189,7 +189,7 @@ app.get('/teacher-dashboard', (req, res) => {
     }
   </script>
 </body>
-</html>
+</html>`
 
   );
 });
@@ -241,7 +241,7 @@ app.get('/submit', async (req, res) => {
     if (qrCodeCounter !== requestedQrCode) {
       res.send('Rejected');
     } else {
-      res.send(
+      res.send(`
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -337,7 +337,7 @@ app.get('/submit', async (req, res) => {
             });
           </script>
         </body>
-        </html>
+        </html>`
       );
     }
   } catch (error) {
@@ -374,7 +374,7 @@ app.post('/submit', async (req, res) => {
       await client.query(createTableQuery);
 
       // Check if the fingerprint is already in the table
-      const checkQuery = SELECT COUNT(*) AS count FROM "${tableName}" WHERE device_fingerprint = $1;
+      const checkQuery = "SELECT COUNT(*) AS count FROM "${tableName}" WHERE device_fingerprint = $1";
       const checkResult = await client.query(checkQuery, [clientFingerprint]);
 
       if (checkResult.rows[0].count > 0) {
@@ -397,7 +397,7 @@ app.post('/submit', async (req, res) => {
 function generateQRCodePeriodically() {
   setInterval(() => {
     qrCodeCounter++;
-    console.log(QR code counter updated to: ${qrCodeCounter});
+    console.log(`QR code counter updated to: ${qrCodeCounter}`);
     generateQRCode(); // Generate QR code without sending a response
   }, 30000); // Generate a new QR code every 30 seconds
 }
