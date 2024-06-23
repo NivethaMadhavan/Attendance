@@ -30,11 +30,12 @@ client.connect()
   .catch(err => console.error('Error connecting to the database:', err));
 
 // Function to generate the QR code
-async function generateQRCode(res = null, req = null) {
+// Function to generate the QR code
+async function generateQRCode(className = '', res = null, req = null) {
   const randomComponent = Math.floor(Math.random() * 1000);
   const timestamp = new Date().getTime();
   const cloudURL = `https://attendance-4au9.onrender.com/submit`;
-  const qrCodeData = `${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}`;
+  const qrCodeData = `${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}&class=${className}`;
 
   return new Promise((resolve, reject) => {
     qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
@@ -81,6 +82,7 @@ async function generateQRCode(res = null, req = null) {
   });
 }
 
+
 // Endpoint to generate the QR code for the home page
 // Route to the home page
 app.get('/', (req, res) => {
@@ -109,6 +111,13 @@ app.get('/', (req, res) => {
 
 // Route to redirect to Teacher Dashboard
 app.get('/teacher-dashboard', (req, res) => {
+  // Replace with actual class list retrieval logic if needed
+  const classes = ['Class A', 'Class B', 'Class C'];
+
+  let classButtons = classes.map(className => `
+    <button class="btn" onclick="generateQRCode('${className}')">Generate QR for ${className}</button>
+  `).join('');
+
   res.send(`
     <!DOCTYPE html>
     <html lang="en">
@@ -124,8 +133,7 @@ app.get('/teacher-dashboard', (req, res) => {
       <div class="container">
         <h1>Teacher Dashboard</h1>
         <div class="btn-container">
-          <button class="btn" onclick="generateQRCode('ClassA')">Generate QR for Class A</button>
-          <button class="btn" onclick="generateQRCode('ClassB')">Generate QR for Class B</button>
+          ${classButtons}
           <a href="/qr-code" class="btn" target="_blank">QR Generation</a>
         </div>
         <div class="qr-code" id="qrCodeContainer">
@@ -156,17 +164,38 @@ app.get('/teacher-dashboard', (req, res) => {
   `);
 });
 
+
+// Endpoint to generate QR code based on class name
 // Endpoint to generate QR code based on class name
 app.post('/generate-qr', async (req, res) => {
   try {
     const className = req.body.className; // Get class name from request body
-    const qrCodeData = await generateQRCode(className); // Call function to generate QR code
-    res.json({ qrCode: qrCodeData }); // Send generated QR code as JSON response
+    const timestamp = new Date();
+    const formattedTimestamp = timestamp.toISOString().replace(/[:.]/g, '-');
+    const tableName = `Department_${className}_${formattedTimestamp}`; // Format: Department_ClassName_YYYY-MM-DDTHH-MM-SS
+
+    // Create a new table for the class session
+    const createTableQuery = `
+      CREATE TABLE "${tableName}" (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100),
+        usn VARCHAR(100),
+        device_fingerprint VARCHAR(100),
+        submission_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+    await client.query(createTableQuery);
+
+    // Generate the QR code with the table name
+    const qrCodeData = await generateQRCode(null, { query: { qrcode: qrCodeCounter } });
+
+    res.json({ qrCode: qrCodeData, tableName: tableName }); // Send generated QR code and table name as JSON response
   } catch (error) {
     console.error('Error generating QR code:', error);
     res.status(500).send('Internal Server Error');
   }
 });
+
 
 
 // Endpoint to generate the QR code for the home page
@@ -309,54 +338,34 @@ app.get('/submit', async (req, res) => {
 });
 
 // POST route handler for form submission
-app.post('/submit', (req, res) => {
-  console.log('Request body:', req.body);
+// POST route handler for form submission
+app.post('/submit', async (req, res) => {
   try {
-    const requestedQrCode = parseInt(req.body.qrcode); // Retrieve from request body, not query
-    console.log(`Received submit request with qrcode: ${requestedQrCode}, current qrCodeCounter: ${qrCodeCounter}`);
-    console.log(typeof qrCodeCounter, typeof requestedQrCode);
-
+    const requestedQrCode = parseInt(req.body.qrcode);
     const clientFingerprint = req.body.clientFingerprint;
+    const { name, usn, className } = req.body;
+    const timestamp = new Date();
+    const formattedTimestamp = timestamp.toISOString().replace(/[:.]/g, '-');
+    const tableName = `Department_${className}_${formattedTimestamp}`; // Assume class name is passed in the form
 
     if (!clientFingerprint) {
       res.status(400).send('Bad Request: Missing client fingerprint');
       return;
     }
-   
+
     if (qrCodeCounter === requestedQrCode) {
       // Check if the fingerprint is already in the table
-      const checkQuery = 'SELECT COUNT(*) AS count FROM "FormSubmissions" WHERE device_fingerprint = $1';
-      client.query(checkQuery, [clientFingerprint], (checkError, checkResults) => {
-        if (checkError) {
-          console.error('Error checking fingerprint:', checkError);
-          res.status(500).send('Internal Server Error');
-          return;
-        }
-        const count = checkResults.rows[0].count;
-        if (count > 0) {
-          // Fingerprint already submitted
-          console.log('Form submission rejected: Fingerprint already submitted');
-          res.send('Form submission rejected: Fingerprint already submitted');
-        } else {
-          // Extract form data from the request
-          const { name, usn } = req.body;
+      const checkQuery = `SELECT COUNT(*) AS count FROM "${tableName}" WHERE device_fingerprint = $1`;
+      const checkResult = await client.query(checkQuery, [clientFingerprint]);
 
-          // Insert the form data into the database
-          const insertQuery = 'INSERT INTO "FormSubmissions" (name, usn, device_fingerprint) VALUES ($1, $2, $3)';
-          client.query(insertQuery, [name, usn, clientFingerprint], (insertError, insertResults) => {
-            if (insertError) {
-              console.error('Error inserting form data:', insertError);
-              res.status(500).send('Internal Server Error');
-            } else {
-              console.log('Form data inserted successfully');
-              res.send('Form submitted successfully');
-            }
-          });
-        }
-      });
+      if (checkResult.rows[0].count > 0) {
+        res.send('Form submission rejected: Fingerprint already submitted');
+      } else {
+        const insertQuery = `INSERT INTO "${tableName}" (name, usn, device_fingerprint) VALUES ($1, $2, $3)`;
+        await client.query(insertQuery, [name, usn, clientFingerprint]);
+        res.send('Form submitted successfully');
+      }
     } else {
-      // QR code doesn't match
-      console.log('Form submission rejected: QR code mismatch');
       res.send('Form submission rejected: QR code mismatch');
     }
   } catch (error) {
