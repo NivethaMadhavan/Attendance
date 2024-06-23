@@ -162,67 +162,67 @@ app.get('/teacher-dashboard', (req, res) => {
           margin: 20px;
         }
       </style>
+      <script>
+          // JavaScript part of your teacher dashboard HTML
+          let currentClassName = 'ClassA'; // Initial class name
+          let qrCodeCounter = 0; // This will keep track of the latest QR code counter
+  
+          function generateQRCode(className) {
+            fetch('/generate-qr', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ className: className })
+            })
+            .then(response => response.json())
+            .then(data => {
+              const img = document.createElement('img');
+              img.src = data.qrCode;
+              img.alt = `QR Code for "${className}"`;
+              document.getElementById('qrCodeContainer').innerHTML = ''; // Clear previous QR code
+              document.getElementById('qrCodeContainer').appendChild(img);
+              currentClassName = className; // Update current class name
+              qrCodeCounter++; // Increment the QR code counter
+            })
+            .catch(error => console.error('Error generating QR code:', error));
+          }
+  
+          // Function to refresh the QR code every 30 seconds
+          function refreshQRCode() {
+            generateQRCode(currentClassName); // Call generateQRCode with current class name
+          }
+  
+          // Initial call to generate QR code and start periodic refresh
+          generateQRCode(currentClassName);
+          setInterval(refreshQRCode, 30000); // Refresh every 30 seconds
+  
+          // Event listeners for buttons to change the class name
+          document.getElementById('btnClassA').addEventListener('click', () => {
+            generateQRCode('ClassA');
+          });
+  
+          document.getElementById('btnClassB').addEventListener('click', () => {
+            generateQRCode('ClassB');
+          });
+  
+        </script>
     </head>
     <body>
-      <div class="container">
-        <h1>Teacher Dashboard</h1>
-        <div class="btn-container">
-          <button id="btnClassA" class="btn">Generate QR for Class A</button>
-          <button id="btnClassB" class="btn">Generate QR for Class B</button>
-          <a href="/qr-code" class="btn" target="_blank">QR Generation</a>
+        <div class="container">
+          <h1>Teacher Dashboard</h1>
+          <div class="btn-container">
+            <button id="btnClassA" class="btn">Generate QR for Class A</button>
+            <button id="btnClassB" class="btn">Generate QR for Class B</button>
+          </div>
+          <div class="qr-code" id="qrCodeContainer">
+            <!-- QR code will be inserted here -->
+          </div>
         </div>
-        <div class="qr-code" id="qrCodeContainer">
-          <!-- QR code will be inserted here -->
-        </div>
-      </div>
-      <script>
-        // JavaScript part of your teacher dashboard HTML
-        let currentClassName = 'ClassA'; // Initial class name
-        let qrCodeCounter = 0; // This will keep track of the latest QR code counter
-
-        function generateQRCode(className) {
-          fetch('/generate-qr', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ className: className })
-          })
-          .then(response => response.json())
-          .then(data => {
-            const img = document.createElement('img');
-            img.src = data.qrCode;
-            img.alt = `QR Code for ${className}`;
-            document.getElementById('qrCodeContainer').innerHTML = ''; // Clear previous QR code
-            document.getElementById('qrCodeContainer').appendChild(img);
-            currentClassName = className; // Update current class name
-            qrCodeCounter++; // Increment the QR code counter
-          })
-          .catch(error => console.error('Error generating QR code:', error));
-        }
-
-        // Function to refresh the QR code every 30 seconds
-        function refreshQRCode() {
-          generateQRCode(currentClassName); // Call generateQRCode with current class name
-        }
-
-        // Initial call to generate QR code and start periodic refresh
-        generateQRCode(currentClassName);
-        setInterval(refreshQRCode, 30000); // Refresh every 30 seconds
-
-        // Event listeners for buttons to change the class name
-        document.getElementById('btnClassA').addEventListener('click', () => {
-          generateQRCode('ClassA');
-        });
-
-        document.getElementById('btnClassB').addEventListener('click', () => {
-          generateQRCode('ClassB');
-        });
-
-      </script>
-    </body>
-    </html>
-  `);
+        
+        </body>
+        </html>
+   `);
 });
 
 // Endpoint to generate QR code based on class name
