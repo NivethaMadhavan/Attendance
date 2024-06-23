@@ -8,8 +8,8 @@ services:
     envVars:
       - key: PORT
         value: "10001"
-      - key: QR_PORT
-        value: "10000"
+      - key: DATABASE_UR
+        value: "postgresql://root:5LwG3ddvMUxytEwxP2cLpoWpbCBwicvE@dpg-cpitueuct0pc738154gg-a/attendence_unym"
 
   - type: web
     name: qr-service
@@ -36,4 +36,9 @@ services:
         value: "10002"
     routes:
       - name: home
-        type: external
+        paths:
+          - "/*"
+
+      - name: teacher-dashboard
+        paths:
+          - "/teacher-dashboard"
