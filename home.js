@@ -348,7 +348,7 @@ app.post('/submit', async (req, res) => {
     const { name, usn, className } = req.body;
     const timestamp = new Date();
     const formattedTimestamp = timestamp.toISOString().replace(/[:.]/g, '-');
-    const tableName = Department_${className}_${formattedTimestamp};
+    const tableName = "Department_${className}_${formattedTimestamp}";
 
     if (!clientFingerprint) {
       res.status(400).send('Bad Request: Missing client fingerprint');
@@ -358,12 +358,12 @@ app.post('/submit', async (req, res) => {
     if (qrCodeCounter === requestedQrCode) {
       // Create the table if it doesn't exist
       const createTableQuery = 
-        CREATE TABLE IF NOT EXISTS "${tableName}" (
+        `CREATE TABLE IF NOT EXISTS "${tableName}" (
           id SERIAL PRIMARY KEY,
           name VARCHAR(255),
           usn VARCHAR(255),
           device_fingerprint VARCHAR(255)
-        )
+        )`
       ;
       await client.query(createTableQuery);
 
@@ -374,7 +374,7 @@ app.post('/submit', async (req, res) => {
       if (checkResult.rows[0].count > 0) {
         res.send('Form submission rejected: Fingerprint already submitted');
       } else {
-        const insertQuery = INSERT INTO "${tableName}" (name, usn, device_fingerprint) VALUES ($1, $2, $3);
+        const insertQuery = `INSERT INTO "${tableName}" (name, usn, device_fingerprint) VALUES ($1, $2, $3)`;
         await client.query(insertQuery, [name, usn, clientFingerprint]);
         res.send('Form submitted successfully');
       }
