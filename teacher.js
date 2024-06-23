@@ -4,8 +4,8 @@ const bodyParser = require('body-parser');
 const { Client } = require('pg');
 
 const app = express();
-const port = process.env.PORT || 10001; // Port for teacher.js
-const qrPort = process.env.DB_PORT || 10000; // Port for QR code generation
+let port = parseInt(process.env.PORT, 10) || 10001; // Port for teacher.js
+let qrPort = parseInt(process.env.PORT, 10) || 10000;; // Port for QR code generation
 
 const connectionString = process.env.DATABASE_URL;
 
