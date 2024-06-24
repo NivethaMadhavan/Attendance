@@ -209,7 +209,6 @@ app.get('/teacher-dashboard', (req, res) => {
         }
 
         // Initial call to generate QR code and start periodic refresh
-        generateQRCode(currentClassName);
         setInterval(refreshQRCode, 30000); // Refresh every 30 seconds
 
         // Event listeners for buttons to change the class name
