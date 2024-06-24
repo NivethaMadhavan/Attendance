@@ -87,24 +87,30 @@ app.get('/latest-qr-code', async (req, res) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Latest QR Code</title>
         <style>
-          body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-          }
-          img {
-            border: 2px solid #000;
-            padding: 10px;
-            background-color: #fff;
-          }
+          /* Your existing styles */
         </style>
       </head>
       <body>
-        <img src="${qrCode}" alt="QR Code ${qrCodeCounter}" />
+        <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+          <img id="qrCodeImg" src="${qrCode}" alt="QR Code ${qrCodeCounter}" style="border: 2px solid #000; padding: 10px; background-color: #fff;" />
+        </div>
         <script>
-          setTimeout(() => { window.location.reload() }, 30000); // Reload every 30 seconds
+          function refreshQRCode() {
+            fetch('/latest-qr-code')
+              .then(response => response.text())
+              .then(data => {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = data;
+                const newQRCodeImg = tempDiv.querySelector('#qrCodeImg');
+                document.getElementById('qrCodeImg').src = newQRCodeImg.src;
+              })
+              .catch(error => console.error('Error fetching QR code:', error))
+              .finally(() => {
+                setTimeout(refreshQRCode, 30000); // Refresh every 30 seconds
+              });
+          }
+
+          refreshQRCode(); // Initial call to start refreshing
         </script>
       </body>
       </html>
