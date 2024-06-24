@@ -180,57 +180,47 @@ app.get('/teacher-dashboard', (req, res) => {
           margin: 20px;
         }
       </style>
-      
-        <script>
-  // Initial class name
-  let currentClassName = 'ClassA';
+      <script>
+        // JavaScript part of your teacher dashboard HTML
+        let currentClassName = 'ClassA'; // Initial class name
 
-  // Function to generate QR code for a given class name
-  function generateQRCode(className) {
-    fetch('/generate-qr', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ className: className })
-    })
-    .then(response => response.json())
-    .then(data => {
-      const img = document.createElement('img');
-      img.src = data.qrCode;
-      const qrCodeContainer = document.getElementById('qrCodeContainer');
-      qrCodeContainer.innerHTML = ''; // Clear previous QR code
-      qrCodeContainer.appendChild(img);
-      currentClassName = className; // Update current class name
-    })
-    .catch(error => console.error('Error generating QR code:', error));
-  }
+        function generateQRCode(className) {
+          fetch('/generate-qr', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ className: className })
+          })
+          .then(response => response.json())
+          .then(data => {
+            const img = document.createElement('img');
+            img.src = data.qrCode;
+            document.getElementById('qrCodeContainer').innerHTML = ''; // Clear previous QR code
+            document.getElementById('qrCodeContainer').appendChild(img);
+            currentClassName = className; // Update current class name
+          })
+          .catch(error => console.error('Error generating QR code:', error));
+        }
 
-  // Function to refresh the QR code periodically
-  function refreshQRCode() {
-    generateQRCode(currentClassName); // Call generateQRCode with current class name
-  }
+        // Function to refresh the QR code every 30 seconds
+        function refreshQRCode() {
+          generateQRCode(currentClassName); // Call generateQRCode with current class name
+        }
 
-  // Initial call to generate QR code and start periodic refresh
-  generateQRCode(currentClassName);
-  let intervalId = setInterval(refreshQRCode, 30000); // Refresh every 30 seconds
+        // Initial call to generate QR code and start periodic refresh
+        generateQRCode(currentClassName);
+        setInterval(refreshQRCode, 30000); // Refresh every 30 seconds
 
-  // Event listener for Class A button
-  document.getElementById('btnClassA').addEventListener('click', () => {
-    clearInterval(intervalId); // Clear existing interval
-    generateQRCode('ClassA'); // Generate QR code for Class A
-    intervalId = setInterval(refreshQRCode, 30000); // Restart interval
-  });
+        // Event listeners for buttons to change the class name
+        document.getElementById('btnClassA').addEventListener('click', () => {
+          generateQRCode('ClassA');
+        });
 
-  // Event listener for Class B button
-  document.getElementById('btnClassB').addEventListener('click', () => {
-    clearInterval(intervalId); // Clear existing interval
-    generateQRCode('ClassB'); // Generate QR code for Class B
-    intervalId = setInterval(refreshQRCode, 30000); // Restart interval
-  });
-</script>
-
-
+        document.getElementById('btnClassB').addEventListener('click', () => {
+          generateQRCode('ClassB');
+        });
+      </script>
     </head>
     <body>
       <div class="container">
@@ -258,7 +248,7 @@ app.post('/generate-qr', (req, res) => {
       currentSession.timestamp = new Date();
       currentSession.tableName = `Department_${className}_${currentSession.timestamp.toISOString().replace(/[:.]/g, '-')}`;
       startQRCodeGenerationInterval(className); // Start a new interval with the updated class name
-          }
+    }
     // Generate the first QR code immediately
     generateQRCode(className)
       .then(qrCode => {
