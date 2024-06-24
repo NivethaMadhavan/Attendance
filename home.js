@@ -65,14 +65,14 @@ function startQRCodeGenerationInterval(className) {
   }
   qrCodeCounter = 0; // Reset counter when interval restarts
   intervalId = setInterval(() => {
-    qrCodeCounter++;
-    console.log(`QR code counter updated to: ${qrCodeCounter}`);
-    generateQRCode(className)
-      .then(qrCode => {
-        // Optionally do something with the newly generated QR code
-      })
-      .catch(err => console.error('Error generating QR code during interval:', err));
-  }, 30000); // Generate a new QR code every 30 seconds
+  qrCodeCounter++;
+  console.log(`QR code counter updated to: ${qrCodeCounter}`);
+  generateQRCode(className)
+    .then(qrCode => {
+      // Optionally do something with the newly generated QR code
+    })
+    .catch(err => console.error('Error generating QR code during interval:', err));
+}, 30000);
 }
 
 // Endpoint to serve the latest QR code image
