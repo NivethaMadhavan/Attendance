@@ -248,7 +248,7 @@ app.post('/generate-qr', (req, res) => {
       currentSession.timestamp = new Date();
       currentSession.tableName = `Department_${className}_${currentSession.timestamp.toISOString().replace(/[:.]/g, '-')}`;
       startQRCodeGenerationInterval(className); // Start a new interval with the updated class name
-    }
+          }
     // Generate the first QR code immediately
     generateQRCode(className)
       .then(qrCode => {
