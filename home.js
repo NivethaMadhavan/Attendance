@@ -208,6 +208,7 @@ app.get('/teacher-dashboard', (req, res) => {
           generateQRCode(currentClassName); // Call generateQRCode with current class name
         }
 
+        function initPage(){
         // Initial call to generate QR code and start periodic refresh
         generateQRCode(currentClassName);
         setInterval(refreshQRCode, 30000); // Refresh every 30 seconds
@@ -220,9 +221,11 @@ app.get('/teacher-dashboard', (req, res) => {
         document.getElementById('btnClassB').addEventListener('click', () => {
           generateQRCode('ClassB');
         });
+        }
+        
       </script>
     </head>
-    <body>
+    <body onload="initPage()">
       <div class="container">
         <h1>Teacher Dashboard</h1>
         <div class="btn-container">
