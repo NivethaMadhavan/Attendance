@@ -140,12 +140,56 @@ app.get('/', (req, res) => {
         <h1>Welcome to Home</h1>
         <div class="btn-container">
           <a href="/teacher-dashboard" class="btn">Teacher Dashboard</a>
+          <a href="/student-login" class="btn">Student Login</a>
         </div>
       </div>
     </body>
     </html>
   `);
 });
+
+// Endpoint to serve the student login page
+app.get('/student-login', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Student Login</title>
+      <style>
+        .container {
+          text-align: center;
+          margin-top: 50px;
+        }
+        .btn-container {
+          margin: 20px;
+        }
+        .btn {
+          padding: 10px 20px;
+          background-color: #5F7DEF;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          margin: 10px;
+          text-decoration: none;
+        }
+        .btn:hover {
+          background-color: #3e4093;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>Student Login</h1>
+        <p>Hello Student</p>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
 
 // Route to redirect to Teacher Dashboard
 app.get('/teacher-dashboard', (req, res) => {
