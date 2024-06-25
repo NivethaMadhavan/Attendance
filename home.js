@@ -40,6 +40,7 @@ client.connect()
 
 // Function to generate the QR code
 async function generateQRCode(className) {
+  qrCodeCounter++; // Increment the QR code counter immediately
   const randomComponent = Math.floor(Math.random() * 1000);
   const timestamp = new Date().getTime();
   const cloudURL = `https://attendance-4au9.onrender.com/submit`;
@@ -63,17 +64,13 @@ function startQRCodeGenerationInterval(className) {
   if (intervalId !== null) {
     clearInterval(intervalId); // Clear any existing interval
   }
-  qrCodeCounter = 0; // Reset counter when interval restarts
   intervalId = setInterval(() => {
-  qrCodeCounter++;
-  console.log(`QR code counter updated to: ${qrCodeCounter}`);
-  generateQRCode(className)
-    .then(qrCode => {
-      // Optionally do something with the newly generated QR code
-    })
-    .catch(err => console.error('Error generating QR code during interval:', err));
-}, 30000);
-
+    generateQRCode(className)
+      .then(qrCode => {
+        // Optionally do something with the newly generated QR code
+      })
+      .catch(err => console.error('Error generating QR code during interval:', err));
+  }, 30000);
 }
 
 // Endpoint to serve the latest QR code image
