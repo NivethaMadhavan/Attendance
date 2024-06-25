@@ -209,8 +209,6 @@ app.get('/teacher-dashboard', (req, res) => {
         }
 
         function initPage(){
-
-        generateQRCode(currentClassName);
         setInterval(refreshQRCode, 30000);
           
         // Event listeners for buttons to change the class name
