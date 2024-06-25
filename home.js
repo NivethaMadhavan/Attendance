@@ -209,15 +209,17 @@ app.get('/teacher-dashboard', (req, res) => {
         }
 
         function initPage(){
-        setInterval(refreshQRCode, 30000);
+       
           
         // Event listeners for buttons to change the class name
         document.getElementById('btnClassA').addEventListener('click', () => {
           generateQRCode('ClassA');
+          setInterval(refreshQRCode, 30000);
         });
 
         document.getElementById('btnClassB').addEventListener('click', () => {
           generateQRCode('ClassB');
+          setInterval(refreshQRCode, 30000);
         });
         }
         
