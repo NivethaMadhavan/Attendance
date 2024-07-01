@@ -430,20 +430,41 @@ app.get('/submit', async (req, res) => {
 // Endpoint to handle attendance submission
 app.post('/submit', async (req, res) => {
   try {
-    const { name, usn, className, deviceFingerprint } = req.body;
-    
-    // Verify device fingerprint
-    if (!verifyDeviceFingerprint(deviceFingerprint)) {
-      throw new Error('Invalid device fingerprint');
+    const requestedQrCode = parseInt(req.body.qrcode);
+    const clientFingerprint = req.body.clientFingerprint;
+    const { name, usn, className } = req.body;
+
+    if (!clientFingerprint) {
+      res.status(400).send('Bad Request: Missing client fingerprint');
+      return;
     }
 
-    const result = await handleAttendanceSubmission(req);
-    res.status(200).send(result);
+    if (qrCodeCounter === requestedQrCode) {
+      // Check if the fingerprint is already in the table
+      const checkQuery = 
+        SELECT COUNT(*) AS count FROM "${currentSession.tableName}" WHERE device_fingerprint = $1
+      ;
+      const checkResult = await client.query(checkQuery, [clientFingerprint]);
+
+      if (checkResult.rows[0].count > 0) {
+        res.send('Form submission rejected: Fingerprint already submitted');
+      } else {
+        const insertQuery = 
+          INSERT INTO "${currentSession.tableName}" (name, usn, device_fingerprint) VALUES ($1, $2, $3)
+        ;
+        await client.query(insertQuery, [name, usn, clientFingerprint]);
+        res.send('Form submitted successfully');
+      }
+    } else {
+      res.send('Form submission rejected: QR code mismatch');
+      console.log(Received qr code : "${requestedQrCode}", Current qr code : "${qrCodeCounter}");
+    }
   } catch (error) {
-    console.error('Error submitting attendance:', error);
-    res.status(500).send('Failed to submit attendance');
+    console.error(Error processing form submission:, error);
+    res.status(500).send('Internal Server Error');
   }
 });
+
 
 // Function to verify device fingerprint
 function verifyDeviceFingerprint(fingerprint) {
