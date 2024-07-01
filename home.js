@@ -412,7 +412,7 @@ app.post('/submit', async (req, res) => {
       return;
     }
 
-    if (qrCodeCounter === requestedQrCode || qrCodeCounter === (requestedQrCode-1)) {
+    if (qrCodeCounter === requestedQrCode || qrCodeCounter === (requestedQrCode+1)) {
       // Check if the fingerprint is already in the table
       const checkQuery = `
         SELECT COUNT(*) AS count FROM "${currentSession.tableName}" WHERE device_fingerprint = $1
