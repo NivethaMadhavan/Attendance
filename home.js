@@ -140,117 +140,12 @@ app.get('/', (req, res) => {
         <h1>Welcome to Home</h1>
         <div class="btn-container">
           <a href="/teacher-dashboard" class="btn">Teacher Dashboard</a>
-          <a href="/student-login" class="btn">Student Login</a>
         </div>
       </div>
     </body>
     </html>
   `);
 });
-
-// Endpoint to serve the student login page
-app.get('/student-login', async (req, res) => {
-  const classes = await getClasses();
-  const classOptions = classes.map(className => `<option value="${className}">${className}</option>`).join('');
-
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Student Login</title>
-      <style>
-        .container {
-          text-align: center;
-          margin-top: 50px;
-        }
-        form {
-          display: inline-block;
-          text-align: left;
-          background: #f9f9f9;
-          padding: 20px;
-          border-radius: 10px;
-          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        label {
-          display: block;
-          margin-bottom: 5px;
-          font-weight: bold;
-        }
-        input, select {
-          width: 100%;
-          padding: 10px;
-          margin-bottom: 15px;
-          border: 1px solid #ccc;
-          border-radius: 5px;
-        }
-        button {
-          width: 100%;
-          padding: 10px;
-          background-color: #5F7DEF;
-          color: white;
-          border: none;
-          border-radius: 5px;
-          cursor: pointer;
-        }
-        button:hover {
-          background-color: #3e4093;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h1>Student Login</h1>
-        <form action="/student-login" method="post">
-          <label for="name">Name</label>
-          <input type="text" id="name" name="name" required>
-          
-          <label for="usn">USN</label>
-          <input type="text" id="usn" name="usn" required>
-          
-          <label for="gmail">Gmail</label>
-          <input type="email" id="gmail" name="gmail" required>
-          
-          <label for="class">Class</label>
-          <select id="class" name="class" required>
-            <option value="">Select a class</option>
-            ${classOptions}
-          </select>
-          
-          <button type="submit">Submit</button>
-        </form>
-      </div>
-    </body>
-    </html>
-  `);
-});
-
-// Function to get list of classes from the database
-async function getClasses() {
-  try {
-    const result = await client.query('SELECT class_name FROM classes');
-    return result.rows.map(row => row.class_name);
-  } catch (err) {
-    console.error('Error fetching classes:', err);
-    return [];
-  }
-}
-
-// Endpoint to handle student login form submission
-app.post('/student-login', async (req, res) => {
-  const { name, usn, gmail, class: className } = req.body;
-  const validClasses = await getClasses();
-
-  if (!validClasses.includes(className)) {
-    res.status(400).send('Invalid class selected');
-    return;
-  }
-
-  // Here, you can handle the form submission, e.g., save to database
-  res.send('Hello Student');
-});
-
 
 // Route to redirect to Teacher Dashboard
 app.get('/teacher-dashboard', (req, res) => {
