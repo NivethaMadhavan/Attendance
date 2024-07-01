@@ -337,6 +337,6 @@ function verifyDeviceFingerprint(fingerprint) {
 }
 
 // Initialize server
-app.listen(port, localip, () => {
-  console.log(`Server is running on http://${localip}:${port}`);
+app.listen(port, 0.0.0.0, () => {
+  console.log(`Server is running on http://0.0.0.0:${port}`);
 });
