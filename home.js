@@ -235,15 +235,14 @@ app.get('/teacher-dashboard', (req, res) => {
         }
 
         // Function to initialize the page
-        function initPage() {
+        function initPage2() {
           setClientFingerprint(); // Set initial client fingerprint
           refreshQRCode(); // Initial call to start refreshing
         }
-
-        window.onload = initPage;
+        
       </script>
     </head>
-    <body>
+    <body onload="initPage2()">
       <div class="container">
         <h1>Teacher Dashboard</h1>
         <div class="btn-container">
