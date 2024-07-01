@@ -242,7 +242,7 @@ app.get('/teacher-dashboard', (req, res) => {
         
       </script>
     </head>
-    <body onload="initPage2()">
+    <body onload="initPage();initPage2();">
       <div class="container">
         <h1>Teacher Dashboard</h1>
         <div class="btn-container">
