@@ -72,7 +72,7 @@ function startQRCodeGenerationInterval(className) {
       // Optionally do something with the newly generated QR code
     })
     .catch(err => console.error('Error generating QR code during interval:', err));
-}, 30000);
+}, 40000);
 
 }
 
@@ -107,7 +107,7 @@ app.get('/latest-qr-code', async (req, res) => {
               })
               .catch(error => console.error('Error fetching QR code:', error))
               .finally(() => {
-                setTimeout(refreshQRCode, 30000); // Refresh every 30 seconds
+                setTimeout(refreshQRCode, 40000); // Refresh every 30 seconds
               });
           }
 
@@ -214,12 +214,12 @@ app.get('/teacher-dashboard', (req, res) => {
         // Event listeners for buttons to change the class name
         document.getElementById('btnClassA').addEventListener('click', () => {
           generateQRCode('ClassA');
-          setInterval(refreshQRCode, 30000);
+          setInterval(refreshQRCode, 40000);
         });
 
         document.getElementById('btnClassB').addEventListener('click', () => {
           generateQRCode('ClassB');
-          setInterval(refreshQRCode, 30000);
+          setInterval(refreshQRCode, 40000);
         });
         }
         
