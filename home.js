@@ -72,7 +72,7 @@ function startQRCodeGenerationInterval(className) {
       // Optionally do something with the newly generated QR code
     })
     .catch(err => console.error('Error generating QR code during interval:', err));
-}, 40000);
+}, 30000);
 
 }
 
@@ -107,7 +107,7 @@ app.get('/latest-qr-code', async (req, res) => {
               })
               .catch(error => console.error('Error fetching QR code:', error))
               .finally(() => {
-                setTimeout(refreshQRCode, 40000); // Refresh every 30 seconds
+                setTimeout(refreshQRCode, 30000); // Refresh every 30 seconds
               });
           }
 
@@ -214,12 +214,12 @@ app.get('/teacher-dashboard', (req, res) => {
         // Event listeners for buttons to change the class name
         document.getElementById('btnClassA').addEventListener('click', () => {
           generateQRCode('ClassA');
-          setInterval(refreshQRCode, 40000);
+          setInterval(refreshQRCode, 30000);
         });
 
         document.getElementById('btnClassB').addEventListener('click', () => {
           generateQRCode('ClassB');
-          setInterval(refreshQRCode, 40000);
+          setInterval(refreshQRCode, 30000);
         });
         }
         
@@ -412,8 +412,7 @@ app.post('/submit', async (req, res) => {
       return;
     }
 
-    // Check if the requested QR code matches the current or is within the allowed range
-    if ([qrCodeCounter, qrCodeCounter - 1,qrCodeCounter+1].includes(requestedQrCode)) {
+    if (qrCodeCounter === requestedQrCode) {
       // Check if the fingerprint is already in the table
       const checkQuery = `
         SELECT COUNT(*) AS count FROM "${currentSession.tableName}" WHERE device_fingerprint = $1
@@ -438,7 +437,6 @@ app.post('/submit', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on http://0.0.0.0:${port}`);
