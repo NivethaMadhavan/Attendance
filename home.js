@@ -77,6 +77,123 @@ function startQRCodeGenerationInterval(className) {
   }, 30000);
 }
 
+app.get('/submit', async (req, res) => {
+  try {
+    const requestedQrCode = parseInt(req.query.qrcode);
+    const className = req.query.className; // Get className from query
+
+    if (qrCodeCounter !== requestedQrCode) {
+      res.send('Rejected');
+      console.log(`Received qr code : "${requestedQrCode}", Current qr code : "${qrCodeCounter}"`);
+    } else {
+      res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Attendance</title>
+          <link rel="icon" href="letter_logo.png" type="image/x-icon">
+          <style>
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              background-color: teal;
+              background-size: contain;
+              background-image: url("hire_now_bg.jpg") fixed;
+              background-position: center;
+              margin: 0;
+              padding: 0;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+              color: navy;
+            }
+            h2 {
+              color: white;
+              font-weight: 700;
+              font-size: 28px;
+              text-align: center;
+            }
+            form {
+              backdrop-filter: blur(100px);
+              padding: 20px;
+              padding-right: 70px;
+              padding-left: 50px;
+              box-shadow: 0px 4px 6px #38497C;
+              border-radius: 15px;
+              width: 500px;
+            }
+            label {
+              display: block;
+              margin-bottom: 10px;
+              color: black;
+              font-size: 22px;
+            }
+            input, textarea {
+              width: 100%;
+              padding: 10px;
+              margin-bottom: 15px;
+              border: none;
+              border-radius: 8px;
+              background: rgba(255, 255, 255, 0.1);
+              color: black;
+            }
+            input {
+              height: 40px;
+            }
+            textarea {
+              height: 110px;
+            }
+            button {
+              background-color: #5F7DEF;
+              color: black;
+              padding: 10px 15px;
+              border: none;
+              border-radius: 8px;
+              cursor: pointer;
+              transition: background-color 0.3s ease;
+            }
+            button:hover {
+              background-color: #3e4093;
+              color: white;
+            }
+          </style>
+          <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
+        </head>
+        <body>
+          <form id="hire_now" action="/submit" method="post">
+            <h2>Accepted! Enter details:</h2>
+            <label for="name">Your Name:</label>
+            <input type="text" id="name" name="name" required>
+            <label for="usn">USN:</label>
+            <input type="text" id="usn" name="usn" required>
+            <input type="hidden" id="qrcode" name="qrcode" value="${requestedQrCode}">
+            <input type="hidden" id="className" name="className" value="${className}">
+            <input type="hidden" id="clientFingerprint" name="clientFingerprint">
+            <button type="submit">Submit</button>
+          </form>
+          <script>
+            // JavaScript to fetch and set the client fingerprint
+            // Using FingerprintJS library
+            FingerprintJS.load().then(fp => {
+              fp.get().then(result => {
+                const visitorId = result.visitorId;
+                document.getElementById('clientFingerprint').value = visitorId;
+              });
+            });
+          </script>
+        </body>
+        </html>
+      `);
+    }
+  } catch (error) {
+    console.error(`Error generating form page:`, error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+
 // Endpoint to serve the latest QR code image
 app.get('/latest-qr-code', async (req, res) => {
   try {
