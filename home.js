@@ -280,7 +280,10 @@ app.post('/submit', async (req, res) => {
     currentClassName = className; // Update global current class name
     currentSession.className = className;
     currentSession.timestamp = new Date();
-    const tableName = `attendance_${className}_${currentSession.timestamp.toISOString().replace(/[:.]/g, '-')}`;
+    const timestampString = currentSession.timestamp.toISOString().replace(/[:.]/g, ''); // Remove colons and periods
+    const safeClassName = className.replace(/[^a-zA-Z0-9_]/g, ''); // Remove non-alphanumeric characters
+    const tableName = `attendance_${safeClassName}_${timestampString}`;
+
 
     // Check if the fingerprint already exists in any table
     const checkFingerprintQuery = `
