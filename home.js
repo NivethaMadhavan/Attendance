@@ -82,6 +82,18 @@ app.get('/latest-qr-code', async (req, res) => {
     console.log("Generating QR Code for client - counter is "+qrCodeCounter);
     const qrCode = await generateQRCode(currentClassName);
     console.log("data is "+qrCode);
+    res.send(qrCode);
+  } catch (error) {
+    console.error(`Error generating QR code:`, error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+app.get('/latest-qr-code-org', async (req, res) => {
+  try {
+    console.log("Generating QR Code for client - counter is "+qrCodeCounter);
+    const qrCode = await generateQRCode(currentClassName);
+    console.log("data is "+qrCode);
     res.send(`
       <!DOCTYPE html>
       <html lang="en">
