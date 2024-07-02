@@ -216,7 +216,7 @@ app.get('/teacher-dashboard', (req, res) => {
             img.src = data;
             document.getElementById('qrCodeContainer').innerHTML = ''; // Clear previous QR code
             document.getElementById('qrCodeContainer').appendChild(img);
-            currentClassName = className; // Update current class name
+            //currentClassName = className; // Update current class name
           })
           .catch(error => console.error('Error generating QR code:', error));
 //          generateQRCode(currentClassName); // Call generateQRCode with current class name
