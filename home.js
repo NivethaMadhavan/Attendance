@@ -193,7 +193,6 @@ app.get('/submit', async (req, res) => {
   }
 });
 
-
 // Endpoint to serve the latest QR code image
 app.get('/latest-qr-code', async (req, res) => {
   try {
@@ -248,189 +247,75 @@ app.get('/', (req, res) => {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Home</title>
+      <title>QR Code Generator</title>
       <style>
         /* Your existing styles */
       </style>
     </head>
     <body>
-      <div class="container">
-        <h1>Welcome to Home</h1>
-        <div class="btn-container">
-          <a href="/teacher-dashboard" class="btn">Teacher Dashboard</a>
-        </div>
+      <h1>QR Code Generator</h1>
+      <form action="/start-session" method="post">
+        <label for="className">Class Name:</label>
+        <input type="text" id="className" name="className" required>
+        <button type="submit">Start Session</button>
+      </form>
+      <div id="qrCode">
+        <!-- QR code will be displayed here -->
       </div>
-    </body>
-    </html>
-  `);
-});
-
-// Route to redirect to Teacher Dashboard
-app.get('/teacher-dashboard', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Teacher Dashboard</title>
-      <style>
-        .container {
-          text-align: center;
-        }
-        .btn-container {
-          margin: 20px;
-        }
-        .btn {
-          padding: 10px 20px;
-          background-color: #5F7DEF;
-          color: white;
-          border: none;
-          border-radius: 5px;
-          cursor: pointer;
-          margin: 10px;
-          text-decoration: none;
-        }
-        .btn:hover {
-          background-color: #3e4093;
-        }
-        .qr-code {
-          margin: 20px;
-        }
-      </style>
       <script>
-        // JavaScript part of your teacher dashboard HTML
-        let currentClassName = 'ClassA'; // Initial class name
-
-        function generateQRCode(className) {
-          fetch('/generate-qr', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ className: className })
-          })
-          .then(response => response.json())
-          .then(data => {
-            const img = document.createElement('img');
-            img.src = data.qrCode;
-            document.getElementById('qrCodeContainer').innerHTML = ''; // Clear previous QR code
-            document.getElementById('qrCodeContainer').appendChild(img);
-            currentClassName = className; // Update current class name
-          })
-          .catch(error => console.error('Error generating QR code:', error));
-        }
-
-        // Function to refresh the QR code every 30 seconds
-        function refreshQRCode() {
-          generateQRCode(currentClassName); // Call generateQRCode with current class name
-        }
-
-        function initPage() {
-          // Event listeners for buttons to change the class name
-          document.getElementById('btnClassA').addEventListener('click', () => {
-            generateQRCode('ClassA');
-            setInterval(refreshQRCode, 30000);
-          });
-
-          document.getElementById('btnClassB').addEventListener('click', () => {
-            generateQRCode('ClassB');
-            setInterval(refreshQRCode, 30000);
-          });
-        }
-
-        // JavaScript to fetch and set the client fingerprint
-        // Using FingerprintJS library
-        function setClientFingerprint() {
-          FingerprintJS.load().then(fp => {
-            fp.get().then(result => {
-              const visitorId = result.visitorId;
-              document.getElementById('clientFingerprint').value = visitorId;
-            });
-          });
-        }
-
-        // Function to initialize the page
-        function initPage2() {
-          setClientFingerprint(); // Set initial client fingerprint
-          refreshQRCode(); // Initial call to start refreshing
-        }
-        
+        // JavaScript to handle QR code updates
       </script>
-    </head>
-    <body onload="initPage();initPage2();">
-      <div class="container">
-        <h1>Teacher Dashboard</h1>
-        <div class="btn-container">
-          <button id="btnClassA" class="btn">Generate QR for Class A</button>
-          <button id="btnClassB" class="btn">Generate QR for Class B</button>
-        </div>
-        <div id="qrCodeContainer" class="qr-code"></div>
-      </div>
     </body>
     </html>
   `);
 });
 
-app.post('/generate-qr', async (req, res) => {
-  const { className } = req.body;
+// Endpoint to handle form submission and save to the database
+app.post('/submit', async (req, res) => {
   try {
-    const qrCode = await generateQRCode(className);
-    res.json({ qrCode });
+    const { name, usn, qrcode, clientFingerprint, className } = req.body;
+    console.log(`Received submission: name="${name}", usn="${usn}", qrcode="${qrcode}", fingerprint="${clientFingerprint}", className="${className}"`);
+
+    const tableName = `attendance_${className.toLowerCase().replace(/\s+/g, '_')}`;
+    const createTableQuery = `
+      CREATE TABLE IF NOT EXISTS ${tableName} (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100),
+        usn VARCHAR(50),
+        client_fingerprint VARCHAR(255),
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+    await client.query(createTableQuery);
+    console.log(`Table "${tableName}" created or already exists`);
+
+    const insertQuery = `
+      INSERT INTO ${tableName} (name, usn, client_fingerprint)
+      VALUES ($1, $2, $3)
+    `;
+    await client.query(insertQuery, [name, usn, clientFingerprint]);
+    console.log(`Data inserted into "${tableName}": name="${name}", usn="${usn}", fingerprint="${clientFingerprint}"`);
+
+    res.send('Submission received and saved!');
   } catch (error) {
-    console.error(`Error generating QR code:`, error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error('Error handling form submission:', error);
+    res.status(500).send('Internal Server Error');
   }
 });
 
-app.post('/submit', (req, res) => {
-  const { clientFingerprint, className } = req.body;
-
-  function verifyDeviceFingerprint(clientFingerprint) {
-    // Compare the provided fingerprint with the expected fingerprint
-    if (clientFingerprint !== req.body.clientFingerprint) {
-      return false;
-    }
-
-    return true;
-  }
-
-  if (verifyDeviceFingerprint(clientFingerprint)) {
-    handleAttendanceSubmission(req.body);
-    res.send('Attendance submitted successfully');
-  } else {
-    res.status(403).send('Unauthorized');
+// Endpoint to start a new session with class name
+app.post('/start-session', async (req, res) => {
+  try {
+    const { className } = req.body;
+    currentClassName = className;
+    startQRCodeGenerationInterval(className); // Start generating QR codes for the new class session
+    res.redirect('/latest-qr-code'); // Redirect to the page displaying the latest QR code
+  } catch (error) {
+    console.error('Error starting new session:', error);
+    res.status(500).send('Internal Server Error');
   }
 });
 
-function handleAttendanceSubmission(data) {
-  const { clientFingerprint, className } = data;
-
-  // Create the attendance table if it does not exist
-  const createTableQuery = `
-    CREATE TABLE IF NOT EXISTS attendance_${className} (
-      id SERIAL PRIMARY KEY,
-      client_fingerprint VARCHAR(255) NOT NULL,
-      timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `;
-
-  // Insert the attendance record into the table
-  const insertQuery = `
-    INSERT INTO attendance_${className} (client_fingerprint)
-    VALUES ($1)
-  `;
-
-  client.query(createTableQuery)
-    .then(() => client.query(insertQuery, [clientFingerprint]))
-    .then(() => {
-      console.log('Attendance record inserted successfully');
-    })
-    .catch(err => {
-      console.error('Error handling attendance submission:', err);
-    });
-}
-
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Server running at http://0.0.0.0:${port}`);
+app.listen(port, localip, () => {
+  console.log(`Server is running on http://${localip}:${port}`);
 });
