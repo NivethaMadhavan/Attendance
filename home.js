@@ -79,7 +79,9 @@ function startQRCodeGenerationInterval(className) {
 // Endpoint to serve the latest QR code image
 app.get('/latest-qr-code', async (req, res) => {
   try {
+    console.log("Generating QR Code for client - counter is "+qrCodeCounter);
     const qrCode = await generateQRCode(currentClassName);
+    console.log("data is "+qrCode);
     res.send(`
       <!DOCTYPE html>
       <html lang="en">
