@@ -284,7 +284,8 @@ app.post('/submit', async (req, res) => {
     const safeClassName = className.replace(/[^a-zA-Z0-9_]/g, ''); // Remove non-alphanumeric characters
     const tableName = `attendance_${safeClassName}_${timestampString}`;
 
-
+    console.log('Generated tableName:', tableName);
+    
     // Check if the fingerprint already exists in any table
     const checkFingerprintQuery = `
       SELECT EXISTS (
@@ -298,6 +299,8 @@ app.post('/submit', async (req, res) => {
         )
       );
     `;
+    console.log('Create Table Query:', createTableQuery);
+
     const checkFingerprintResult = await client.query(checkFingerprintQuery, [clientFingerprint]);
 
     if (checkFingerprintResult.rows[0].exists) {
