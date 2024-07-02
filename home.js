@@ -205,7 +205,19 @@ app.get('/teacher-dashboard', (req, res) => {
 
         // Function to refresh the QR code every 30 seconds
         function refreshQRCode() {
-          generateQRCode(currentClassName); // Call generateQRCode with current class name
+          fetch('/latest-qr-code', {
+            method: 'GET'
+          })
+          .then(response => response.json())
+          .then(data => {
+            const img = document.createElement('img');
+            img.src = data.qrCode;
+            document.getElementById('qrCodeContainer').innerHTML = ''; // Clear previous QR code
+            document.getElementById('qrCodeContainer').appendChild(img);
+            currentClassName = className; // Update current class name
+          })
+          .catch(error => console.error('Error generating QR code:', error));
+//          generateQRCode(currentClassName); // Call generateQRCode with current class name
         }
 
         function initPage(){
