@@ -210,10 +210,10 @@ app.get('/teacher-dashboard', (req, res) => {
           fetch('/latest-qr-code', {
             method: 'GET'
           })
-          .then(response => response.json())
+          .then(response => response.text())
           .then(data => {
             const img = document.createElement('img');
-            img.src = data.qrCode;
+            img.src = data;
             document.getElementById('qrCodeContainer').innerHTML = ''; // Clear previous QR code
             document.getElementById('qrCodeContainer').appendChild(img);
             currentClassName = className; // Update current class name
