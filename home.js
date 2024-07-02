@@ -271,6 +271,7 @@ app.get('/', (req, res) => {
 });
 
 // Endpoint to handle form submission and save to the database
+// Endpoint to handle form submission and save to the database
 app.post('/submit', async (req, res) => {
   try {
     const { name, usn, qrcode, clientFingerprint, className } = req.body;
@@ -280,24 +281,40 @@ app.post('/submit', async (req, res) => {
     currentSession.className = className;
     currentSession.timestamp = new Date();
     const tableName = `attendance_${className}_${currentSession.timestamp.toISOString().replace(/[:.]/g, '-')}`;
-    const createTableQuery = `
-      CREATE TABLE IF NOT EXISTS "${tableName}" (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(100),
-        usn VARCHAR(50),
-        client_fingerprint VARCHAR(255),
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `;
-    await client.query(createTableQuery);
-    console.log(`Table "${tableName}" created or already exists`);
 
-    // Check if the client fingerprint already exists in any table
-    const checkFingerprintQuery = `SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '${tableName}' AND table_schema = 'public');`;
-    const result = await client.query(checkFingerprintQuery);
-    
-    if (!result.rows[0].exists) {
-      // Table does not exist, create it and insert data
+    // Check if the fingerprint already exists in any table
+    const checkFingerprintQuery = `
+      SELECT EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+        AND EXISTS (
+          SELECT 1
+          FROM ${tableName}
+          WHERE client_fingerprint = $1
+        )
+      );
+    `;
+    const checkFingerprintResult = await client.query(checkFingerprintQuery, [clientFingerprint]);
+
+    if (checkFingerprintResult.rows[0].exists) {
+      // If fingerprint already exists, reject the submission
+      res.send('Duplicate fingerprint detected. Submission rejected.');
+    } else {
+      // If fingerprint does not exist, proceed with table creation and data insertion
+      const createTableQuery = `
+        CREATE TABLE IF NOT EXISTS ${tableName} (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(100),
+          usn VARCHAR(50),
+          client_fingerprint VARCHAR(255),
+          timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+      await client.query(createTableQuery);
+      console.log(`Table "${tableName}" created or already exists`);
+
+      // Insert data into the table
       const insertQuery = `
         INSERT INTO ${tableName} (name, usn, client_fingerprint)
         VALUES ($1, $2, $3)
@@ -306,10 +323,6 @@ app.post('/submit', async (req, res) => {
       console.log(`Data inserted into "${tableName}": name="${name}", usn="${usn}", fingerprint="${clientFingerprint}"`);
 
       res.send('Submission received and saved!');
-    } else {
-      // Table exists, reject the submission
-      res.send('Submission rejected: Duplicate fingerprint.');
-      console.log(`Duplicate fingerprint detected for ${clientFingerprint}. Submission rejected.`);
     }
   } catch (error) {
     console.error('Error handling form submission:', error);
