@@ -241,33 +241,33 @@ app.get('/latest-qr-code', async (req, res) => {
 
 // Endpoint to generate the QR code for the home page
 app.get('/', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>QR Code Generator</title>
-      <style>
-        /* Your existing styles */
-      </style>
-    </head>
-    <body>
-      <h1>QR Code Generator</h1>
-      <form action="/start-session" method="post">
-        <label for="className">Class Name:</label>
-        <input type="text" id="className" name="className" required>
-        <button type="submit">Start Session</button>
-      </form>
-      <div id="qrCode">
-        <!-- QR code will be displayed here -->
-      </div>
-      <script>
-        // JavaScript to handle QR code updates
-      </script>
-    </body>
-    </html>
-  `);
+      res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>QR Code Generator</title>
+        <style>
+          /* Your existing styles */
+        </style>
+      </head>
+      <body>
+        <h1>QR Code Generator</h1>
+        <form action="/start-session" method="post">
+          <label for="className">Class Name:</label>
+          <input type="text" id="className" name="className" required>
+          <button type="submit">Start Session</button>
+        </form>
+        <div id="qrCode">
+          <!-- QR code will be displayed here -->
+        </div>
+        <script>
+          // JavaScript to handle QR code updates
+        </script>
+      </body>
+      </html>
+    `);
 });
 
 // Endpoint to handle form submission and save to the database
@@ -276,7 +276,10 @@ app.post('/submit', async (req, res) => {
     const { name, usn, qrcode, clientFingerprint, className } = req.body;
     console.log(`Received submission: name="${name}", usn="${usn}", qrcode="${qrcode}", fingerprint="${clientFingerprint}", className="${className}"`);
 
-    const tableName = `attendance_${className.toLowerCase().replace(/\s+/g, '_')}`;
+    currentClassName = className; // Update global current class name
+    currentSession.className = className;
+    currentSession.timestamp = new Date();
+    const tableName = `attendance_${className}_${currentSession.timestamp.toISOString().replace(/[:.]/g, '-')}`;
     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS "${tableName}" (
         id SERIAL PRIMARY KEY,
@@ -289,14 +292,25 @@ app.post('/submit', async (req, res) => {
     await client.query(createTableQuery);
     console.log(`Table "${tableName}" created or already exists`);
 
-    const insertQuery = `
-      INSERT INTO ${tableName} (name, usn, client_fingerprint)
-      VALUES ($1, $2, $3)
-    `;
-    await client.query(insertQuery, [name, usn, clientFingerprint]);
-    console.log(`Data inserted into "${tableName}": name="${name}", usn="${usn}", fingerprint="${clientFingerprint}"`);
+    // Check if the client fingerprint already exists in any table
+    const checkFingerprintQuery = `SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '${tableName}' AND table_schema = 'public');`;
+    const result = await client.query(checkFingerprintQuery);
+    
+    if (!result.rows[0].exists) {
+      // Table does not exist, create it and insert data
+      const insertQuery = `
+        INSERT INTO ${tableName} (name, usn, client_fingerprint)
+        VALUES ($1, $2, $3)
+      `;
+      await client.query(insertQuery, [name, usn, clientFingerprint]);
+      console.log(`Data inserted into "${tableName}": name="${name}", usn="${usn}", fingerprint="${clientFingerprint}"`);
 
-    res.send('Submission received and saved!');
+      res.send('Submission received and saved!');
+    } else {
+      // Table exists, reject the submission
+      res.send('Submission rejected: Duplicate fingerprint.');
+      console.log(`Duplicate fingerprint detected for ${clientFingerprint}. Submission rejected.`);
+    }
   } catch (error) {
     console.error('Error handling form submission:', error);
     res.status(500).send('Internal Server Error');
