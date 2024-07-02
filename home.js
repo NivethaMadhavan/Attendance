@@ -299,6 +299,16 @@ app.post('/submit', async (req, res) => {
         )
       );
     `;
+
+    const createTableQuery = `
+      CREATE TABLE IF NOT EXISTS "${tableName}" (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100),
+        usn VARCHAR(50),
+        client_fingerprint VARCHAR(255),
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
     console.log('Create Table Query:', createTableQuery);
 
     const checkFingerprintResult = await client.query(checkFingerprintQuery, [clientFingerprint]);
