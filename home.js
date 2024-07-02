@@ -280,7 +280,7 @@ app.post('/submit', async (req, res) => {
     currentClassName = className; // Update global current class name
     currentSession.className = className;
     currentSession.timestamp = new Date();
-    const timestampString = currentSession.timestamp.toISOString().replace(/[:.]/g, '-') // Remove colons and periods
+    const timestampString = currentSession.timestamp.toISOString().replace(/[:.]/g, '-'); // Remove colons and periods
     const safeClassName = className.replace(/[^a-zA-Z0-9_]/g, ''); // Remove non-alphanumeric characters
     const tableName = `attendance_${safeClassName}_${timestampString}`;
 
