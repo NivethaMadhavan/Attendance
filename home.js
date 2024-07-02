@@ -278,7 +278,7 @@ app.post('/submit', async (req, res) => {
 
     const tableName = `attendance_${className.toLowerCase().replace(/\s+/g, '_')}`;
     const createTableQuery = `
-      CREATE TABLE IF NOT EXISTS ${tableName} (
+      CREATE TABLE IF NOT EXISTS "${tableName}" (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100),
         usn VARCHAR(50),
