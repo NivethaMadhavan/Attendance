@@ -431,7 +431,7 @@ app.post('/submit', async (req, res) => {
   try {
     const requestedQrCode = parseInt(req.body.qrcode);
     const clientFingerprint = req.body.clientFingerprint;
-    const { name, usn, className } = req.body;
+    const { name, usn, className, subjectName } = req.body;
 
     if (!clientFingerprint) {
       res.status(400).send('Bad Request: Missing client fingerprint');
@@ -439,7 +439,6 @@ app.post('/submit', async (req, res) => {
     }
 
     if (qrCodeCounter === requestedQrCode) {
-      // Check if the fingerprint is already in the table
       const checkQuery = `
         SELECT COUNT(*) AS count FROM "${currentSession.tableName}" WHERE device_fingerprint = $1
       `;
@@ -452,9 +451,25 @@ app.post('/submit', async (req, res) => {
           INSERT INTO "${currentSession.tableName}" (name, usn, device_fingerprint) VALUES ($1, $2, $3)
         `;
         await client.query(insertQuery, [name, usn, clientFingerprint]);
+
+        const updateStudentQuery = `
+          UPDATE students
+          SET ${subjectName.toLowerCase()}_attendance = ${subjectName.toLowerCase()}_attendance + 1,
+              ${subjectName.toLowerCase()}_total = ${subjectName.toLowerCase()}_total + 1
+          WHERE usn = $1
+        `;
+        await client.query(updateStudentQuery, [usn]);
+
         res.send('Form submitted successfully');
       }
     } else {
+      const updateStudentQuery = `
+        UPDATE students
+        SET ${subjectName.toLowerCase()}_total = ${subjectName.toLowerCase()}_total + 1
+        WHERE usn = $1
+      `;
+      await client.query(updateStudentQuery, [usn]);
+
       res.send('Form submission rejected: QR code mismatch');
       console.log(`Received qr code : "${requestedQrCode}", Current qr code : "${qrCodeCounter}"`);
     }
