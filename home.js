@@ -3,6 +3,20 @@ const qr = require('qrcode');
 const bodyParser = require('body-parser');
 const { Client } = require('pg');
 const ip = require('ip');
+const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session);
+
+app.use(session({
+  store: new pgSession({
+    pool: client // Your PostgreSQL client
+  }),
+  secret: 'your_secret_key', // Replace with a secure secret key
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+  }
+}));
 
 const app = express();
 let port = parseInt(process.env.PORT, 10) || 10000; // Default to 10000 if PORT is not set or invalid
@@ -37,6 +51,14 @@ const client = new Client({
 client.connect()
   .then(() => console.log('Connected to the database'))
   .catch(err => console.error('Error connecting to the database:', err));
+
+function isAuthenticated(req, res, next) {
+  if (req.session.user) {
+    next();
+  } else {
+    res.redirect('/login');
+  }
+}
 
 // Function to generate the QR code
 async function generateQRCode(className) {
@@ -242,6 +264,78 @@ app.get('/register', (req, res) => {
     </body>
     </html>
   `);
+});
+
+// Login route
+app.get('/login', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Login</title>
+    </head>
+    <body>
+      <h2>Login</h2>
+      <form action="/login" method="post">
+        <label for="usn">USN:</label>
+        <input type="text" id="usn" name="usn" required><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required><br>
+        <button type="submit">Login</button>
+      </form>
+    </body>
+    </html>
+  `);
+});
+
+// Student Dashboard route
+app.get('/student-dashboard', isAuthenticated, (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Student Dashboard</title>
+    </head>
+    <body>
+      <h2>Welcome, ${req.session.user.name}!</h2>
+      <p>Your USN: ${req.session.user.usn}</p>
+      <a href="/logout">Logout</a>
+    </body>
+    </html>
+  `);
+});
+
+
+// Login route
+app.post('/login', async (req, res) => {
+  const { usn, password } = req.body;
+
+  try {
+    const result = await client.query('SELECT * FROM students WHERE usn = $1 AND password = $2', [usn, password]);
+    if (result.rows.length > 0) {
+      req.session.user = { usn: result.rows[0].usn, name: result.rows[0].name };
+      res.redirect('/student-dashboard');
+    } else {
+      res.status(401).send('Invalid credentials');
+    }
+  } catch (err) {
+    console.error('Error logging in:', err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Logout route
+app.get('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).send('Unable to log out');
+    }
+    res.redirect('/');
+  });
+});
+
+app.get('/student-dashboard', isAuthenticated, (req, res) => {
+  res.send(`Welcome, ${req.session.user.name}!`);
 });
 
 app.post('/register', async (req, res) => {
