@@ -238,7 +238,7 @@ app.get('/register', (req, res) => {
         <label for="className">Class Name:</label>
         <input type="text" id="className" name="className" required>
         <label for="password">Password:</label>
-        <input type="password" id="password" name="pasword" required>
+        <input type="password" id="password" name="password" required>
         <button type="submit">Submit</button>
       </form>
     </body>
