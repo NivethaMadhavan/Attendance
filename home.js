@@ -525,6 +525,15 @@ app.post('/generate-qr', async (req, res) => {
       startQRCodeGenerationInterval(className); // Start a new interval with the updated class name
     }
 
+    const subjectTotalField = `${className.toLowerCase()}_total`;
+    console.log(subjectTotalField);
+    const updateQuery = `
+      UPDATE students
+      SET ${subjectTotalField} = ${subjectTotalField} + 1
+      WHERE class_name = $1
+    `;
+    await client.query(updateQuery, [className]);
+
     // Generate the first QR code immediately
     const qrCode = await generateQRCode(className);
 
