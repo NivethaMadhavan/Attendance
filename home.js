@@ -43,6 +43,7 @@ client.connect()
 app.use(session({
   store: new pgSession({
     pool: client,
+    conString: process.env.DATABASE_URL,
     createTableIfMissing: true// Your PostgreSQL client
   }),
   secret: 'your_secret_key', // Replace with a secure secret key
@@ -294,7 +295,7 @@ app.get('/login', (req, res) => {
 });
 
 // Student Dashboard route
-app.get('/student-dashboard', (req, res) => {
+app.get('/student-dashboard',isAuthenticated, (req, res) => {
   const user = req.session.user;
   res.send(`
     <!DOCTYPE html>
