@@ -153,11 +153,90 @@ app.get('/', (req, res) => {
         <div class="btn-container">
           <a href="/teacher-dashboard" class="btn">Teacher Dashboard</a>
           <a href="/register" class="btn">Register</a>
+          <a href="/login" class="btn">Student Dashboard</a>
         </div>
       </div>
     </body>
     </html>
   `);
+});
+
+// Endpoint to serve the login page
+app.get('/login', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Login</title>
+      <style>
+        /* Your existing styles */
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>Login</h1>
+        <form action="/login" method="post">
+          <label for="usn">USN:</label>
+          <input type="text" id="usn" name="usn" required>
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required>
+          <button type="submit">Login</button>
+        </form>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+// Endpoint to handle login form submission
+app.post('/login', async (req, res) => {
+  try {
+    const { usn, password } = req.body;
+
+    // Query to check if the credentials match
+    const query = `
+      SELECT * FROM login
+      WHERE usn = $1 AND password = $2
+    `;
+    const result = await client.query(query, [usn, password]);
+
+    if (result.rows.length > 0) {
+      // If credentials are correct, redirect to the student dashboard
+      res.redirect(`/dashboard?usn=${usn}`);
+    } else {
+      // If credentials are incorrect, redirect back to the login page with an error message
+      res.redirect('/login?error=Invalid credentials');
+    }
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+app.post('/login', async (req, res) => {
+  try {
+    const { usn, password } = req.body;
+
+    // Query to check if the credentials match
+    const query = `
+      SELECT * FROM login
+      WHERE usn = $1 AND password = $2
+    `;
+    const result = await client.query(query, [usn, password]);
+
+    if (result.rows.length > 0) {
+      // If credentials are correct, redirect to the student dashboard
+      res.redirect(`/dashboard?usn=${usn}`);
+    } else {
+      // If credentials are incorrect, redirect back to the login page with an error message
+      res.redirect('/login?error=Invalid credentials');
+    }
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
 app.get('/register', (req, res) => {
@@ -273,6 +352,54 @@ app.post('/register', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
+// Endpoint to serve the student dashboard
+app.get('/dashboard', async (req, res) => {
+  try {
+    const usn = req.query.usn;
+
+    // Fetch student details from the database based on USN
+    const query = `
+      SELECT * FROM students
+      WHERE usn = $1
+    `;
+    const result = await client.query(query, [usn]);
+
+    if (result.rows.length > 0) {
+      const student = result.rows[0];
+      // Render the dashboard with student attendance details
+      res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Student Dashboard</title>
+          <style>
+            /* Your existing styles */
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>Welcome, ${student.name}!</h1>
+            <p>USN: ${student.usn}</p>
+            <p>Class: ${student.class_name}</p>
+            <p>Total Attendance: ${student.computer_total}</p>
+            <p>Computer Attendance: ${student.computer_attendance}</p>
+            <!-- Add more attendance details as needed -->
+          </div>
+        </body>
+        </html>
+      `);
+    } else {
+      res.status(404).send('Student not found');
+    }
+  } catch (error) {
+    console.error('Error fetching student details:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
 
 
 // Route to redirect to Teacher Dashboard
