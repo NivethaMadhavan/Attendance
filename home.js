@@ -249,6 +249,7 @@ app.get('/register', (req, res) => {
 app.post('/register', async (req, res) => {
   try {
     const { name, usn, className, password } = req.body;
+    console.log(password);
     
     // Insert the new student into the students table
     const insertQuery1 = `
