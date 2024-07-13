@@ -369,7 +369,7 @@ app.get('/dashboard', async (req, res) => {
       const student = result.rows[0];
       // Render the dashboard with student attendance details
       function calc(a,b){
-        return ((a/100)*b).ToFixed(2);}
+        return ((a/100)*b).toFixed(2);}
       
       res.send(`
         <!DOCTYPE html>
