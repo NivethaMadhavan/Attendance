@@ -525,14 +525,7 @@ app.post('/generate-qr', async (req, res) => {
       startQRCodeGenerationInterval(className); // Start a new interval with the updated class name
     }
 
-    const subjectAttField = `${className.toLowerCase()}_attendance`;
-    console.log(subjectAttField);
-    const updateQuery1 = `
-      UPDATE students
-      SET ${subjectAttField} = ${subjectAttField} + 1
-      WHERE class_name = $1
-    `;
-    await client.query(updateQuery1, [className]);
+     const subjectTotalField = `${className.toLowerCase()}_total`;
 
     // Generate the first QR code immediately
     const qrCode = await generateQRCode(className);
@@ -549,13 +542,11 @@ app.post('/generate-qr', async (req, res) => {
     await client.query(createTableQuery);
 
     // Update subject total field
-    console.log(subjectAttField);
+    console.log(subjectTotalField);
 
-    const subjectTotalField = `${className.toLowerCase()}_total`;
     const updateQuery = `
       UPDATE students
-      SET ${subjectTotalField} = ${subjectTotalField} + 1,
-      SET ${subjectAttField} = ${subjectAttField} + 1
+      SET ${subjectTotalField} = ${subjectTotalField} + 1
       WHERE class_name = $1
     `;
     await client.query(updateQuery, [className]);
