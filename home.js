@@ -237,6 +237,8 @@ app.get('/register', (req, res) => {
         <input type="text" id="usn" name="usn" required>
         <label for="className">Class Name:</label>
         <input type="text" id="className" name="className" required>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="pasword" required>
         <button type="submit">Submit</button>
       </form>
     </body>
@@ -246,7 +248,7 @@ app.get('/register', (req, res) => {
 
 app.post('/register', async (req, res) => {
   try {
-    const { name, usn, className } = req.body;
+    const { name, usn, className, password } = req.body;
     
     // Insert the new student into the students table
     const insertQuery = `
@@ -255,6 +257,13 @@ app.post('/register', async (req, res) => {
       ON CONFLICT (usn) DO NOTHING;
     `;
     await client.query(insertQuery, [name, usn, className]);
+
+    const insertQuery = `
+      INSERT INTO login (name, usn, password)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (usn) DO NOTHING;
+    `;
+    await client.query(insertQuery, [name, usn, password]);
     
     // Redirect the user back to the home page after successful registration
     res.redirect('/');
