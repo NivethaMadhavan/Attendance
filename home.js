@@ -368,6 +368,9 @@ app.get('/dashboard', async (req, res) => {
     if (result.rows.length > 0) {
       const student = result.rows[0];
       // Render the dashboard with student attendance details
+      function calc(a,b){
+        return ((a/100)*b).ToFixed(2);}
+      
       res.send(`
         <!DOCTYPE html>
         <html lang="en">
@@ -385,7 +388,7 @@ app.get('/dashboard', async (req, res) => {
             <p>USN: ${student.usn}</p>
             <p>Class: ${student.class_name}</p>
             <p>Total Attendance: ${student.computer_total}</p>
-            <p>Computer Attendance: ${student.computer_attendance}</p>
+            <p>Computer Attendance: ${student.computer_attendance} (${calc(student.computer_attendance, student.computer_total)}%)</p>
             <!-- Add more attendance details as needed -->
           </div>
         </body>
