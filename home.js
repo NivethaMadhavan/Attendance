@@ -61,9 +61,6 @@ function isAuthenticated(req, res, next) {
   }
 }
 
-
-
-
 // Function to generate the QR code
 async function generateQRCode(className) {
   const randomComponent = Math.floor(Math.random() * 1000);
@@ -320,7 +317,7 @@ app.post('/login', async (req, res) => {
   try {
     const result = await client.query('SELECT * FROM login_credentials WHERE student_id = $1 AND password_hash = $2', [usn,password]);
     if (result.rows.length > 0) {
-      req.session.user = { usn: result.rows[0].usn, name: result.rows[0].name };
+      req.session.user = { usn: result.rows[0].student_id, name: result.rows[0].password_hash};
       res.redirect('/student-dashboard');
     } else {
       res.status(401).send('Invalid credentials');
