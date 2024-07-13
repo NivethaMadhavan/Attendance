@@ -11,10 +11,10 @@
 "qrcode": "^1.5.0",
 "ip": "^1.1.5",
 "body-parser": "^1.19.0",
-"@fingerprintjs/fingerprintjs": "^3.3.4",
+"@fingerprintjs/fingerprintjs": "^4.4.1",
 "express": "^4.17.1",
-"express-session": "^1.17.2",
-"pg": "^8.7.1",
-"connect-pg-simple": "^7.1.0"
+"express-session": "^1.18.0",
+"pg": "^8.12.0",
+"connect-pg-simple": "^9.0.1"
 }
 }
