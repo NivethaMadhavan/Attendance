@@ -304,7 +304,6 @@ app.get('/student-dashboard', (req, res) => {
     </head>
     <body>
       <h2>Hello!</h2>
-      <p> ur usn is ${user.name} </p>
       <a href="/logout">Logout</a>
     </body>
     </html>
