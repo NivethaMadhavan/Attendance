@@ -549,7 +549,6 @@ app.post('/generate-qr', async (req, res) => {
     await client.query(createTableQuery);
 
     // Update subject total field
-    const subjectTotalField = `${className.toLowerCase()}_total`;
     console.log(subjectTotalField);
     const updateQuery = `
       UPDATE students
