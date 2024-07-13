@@ -375,7 +375,7 @@ app.get('/teacher-dashboard', (req, res) => {
 app.post('/generate-qr', async (req, res) => {
   try {
     const className = req.body.className; // Get class name from request body
-    const subject = req.body.subject; // Assuming subject is also passed in the request body
+    const subject = req.body.className; // Assuming subject is also passed in the request body
 
     if (className !== currentSession.className) {
       currentClassName = className; // Update global current class name
@@ -400,7 +400,7 @@ app.post('/generate-qr', async (req, res) => {
     await client.query(createTableQuery);
 
     // Update subject total field
-    const subjectTotalField = `${subject.toLowerCase()}_total`;
+    const subjectTotalField = `${className.toLowerCase()}_total`;
     const updateQuery = `
       UPDATE students
       SET ${subjectTotalField} = ${subjectTotalField} + 1
@@ -411,7 +411,7 @@ app.post('/generate-qr', async (req, res) => {
     res.json({ qrCode });
 
   } catch (error) {
-    console.error(`Error generating QR code for class ${className}, subject ${subject}:`, error);
+    console.error(`Error generating QR code for class ${className}:`, error);
     res.status(500).send('Internal Server Error');
   }
 });
@@ -559,8 +559,8 @@ app.post('/submit', async (req, res) => {
           INSERT INTO "${currentSession.tableName}" (name, usn, device_fingerprint) VALUES ($1, $2, $3)
         `;
         await client.query(insertQuery, [name, usn, clientFingerprint]);
-        const subjectTotalField = `${subject.toLowerCase()}_total`;
-        const subjectAttendanceField = `${subject.toLowerCase()}_attendance`;
+        const subjectTotalField = `${className.toLowerCase()}_total`;
+        const subjectAttendanceField = `${className.toLowerCase()}_attendance`;
         const updateQuery = `
           UPDATE students
           SET ${subjectTotalField} = ${subjectTotalField} + 1, ${subjectAttendanceField} = ${subjectAttendanceField} + 1
