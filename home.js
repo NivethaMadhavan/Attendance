@@ -194,7 +194,7 @@ app.get('/teacher-dashboard', (req, res) => {
       </style>
       <script>
         // JavaScript part of your teacher dashboard HTML
-        let currentClassName = 'ClassA'; // Initial class name
+        let currentClassName = 'Computer'; // Initial class name
 
         function generateQRCode(className) {
           fetch('/generate-qr', {
@@ -237,12 +237,12 @@ app.get('/teacher-dashboard', (req, res) => {
           
         // Event listeners for buttons to change the class name
         document.getElementById('btnClassA').addEventListener('click', () => {
-          generateQRCode('ClassA');
+          generateQRCode('computer');
           setInterval(refreshQRCode, 30000);
         });
 
         document.getElementById('btnClassB').addEventListener('click', () => {
-          generateQRCode('ClassB');
+          generateQRCode('math');
           setInterval(refreshQRCode, 30000);
         });
         }
@@ -253,8 +253,8 @@ app.get('/teacher-dashboard', (req, res) => {
       <div class="container">
         <h1>Teacher Dashboard</h1>
         <div class="btn-container">
-          <button id="btnClassA" class="btn">Generate QR for Class A</button>
-          <button id="btnClassB" class="btn">Generate QR for Class B</button>
+          <button id="btnClassA" class="btn">Generate QR for Computer</button>
+          <button id="btnClassB" class="btn">Generate QR for Maths</button>
         </div>
         <div class="qr-code" id="qrCodeContainer">
           <!-- QR code will be inserted here -->
@@ -305,6 +305,29 @@ app.post('/generate-qr', (req, res) => {
     console.error(`Error generating QR code:`, error);
     res.status(500).send('Internal Server Error');
   }
+
+  try {
+    console.log(`Generating QR code for class: ${className}, subject: ${subject}`);
+    const qrCode = await generateQRCode(className);
+    console.log("data is " + qrCode);
+    currentClassName = className;
+    startQRCodeGenerationInterval(className); // Start interval for the new class
+
+    // Update subject total field
+    const subjectTotalField = `${subject.toLowerCase()}_total`;
+    const updateQuery = `
+      UPDATE students
+      SET ${subjectTotalField} = ${subjectTotalField} + 1
+      WHERE class_name = $1
+    `;
+    await client.query(updateQuery, [className]);
+
+    res.json({ qrCode });
+  } catch (error) {
+    console.error(`Error generating QR code for class ${className}, subject ${subject}:`, error);
+    res.status(500).send('Internal Server Error');
+  }
+  
 });
 
 // Endpoint to handle the QR code validation and show the form
@@ -450,6 +473,15 @@ app.post('/submit', async (req, res) => {
           INSERT INTO "${currentSession.tableName}" (name, usn, device_fingerprint) VALUES ($1, $2, $3)
         `;
         await client.query(insertQuery, [name, usn, clientFingerprint]);
+        const subjectTotalField = `${subject.toLowerCase()}_total`;
+        const subjectAttendanceField = `${subject.toLowerCase()}_attendance`;
+        const updateQuery = `
+          UPDATE students
+          SET ${subjectTotalField} = ${subjectTotalField} + 1, ${subjectAttendanceField} = ${subjectAttendanceField} + 1
+          WHERE usn = $1
+        `;
+        await client.query(updateQuery, [usn]);
+        
         res.send('Form submitted successfully');
       }
     } else {
