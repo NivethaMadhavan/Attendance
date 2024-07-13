@@ -152,12 +152,118 @@ app.get('/', (req, res) => {
         <h1>Welcome to Home</h1>
         <div class="btn-container">
           <a href="/teacher-dashboard" class="btn">Teacher Dashboard</a>
+          <a href="/register" class="btn">Register</a>
         </div>
       </div>
     </body>
     </html>
   `);
 });
+
+app.get('/register', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Register</title>
+      <style>
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background-color: teal;
+          background-size: contain;
+          background-image: url("hire_now_bg.jpg") fixed;
+          background-position: center;
+          margin: 0;
+          padding: 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          color: navy;
+        }
+        h2 {
+          color: white;
+          font-weight: 700;
+          font-size: 28px;
+          text-align: center;
+        }
+        form {
+          backdrop-filter: blur(100px);
+          padding: 20px;
+          padding-right: 70px;
+          padding-left: 50px;
+          box-shadow: 0px 4px 6px #38497C;
+          border-radius: 15px;
+          width: 500px;
+        }
+        label {
+          display: block;
+          margin-bottom: 10px;
+          color: black;
+          font-size: 22px;
+        }
+        input {
+          width: 100%;
+          padding: 10px;
+          margin-bottom: 15px;
+          border: none;
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.1);
+          color: black;
+        }
+        button {
+          background-color: #5F7DEF;
+          color: black;
+          padding: 10px 15px;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+        }
+        button:hover {
+          background-color: #3e4093;
+          color: white;
+        }
+      </style>
+    </head>
+    <body>
+      <form action="/register" method="post">
+        <h2>Register</h2>
+        <label for="name">Your Name:</label>
+        <input type="text" id="name" name="name" required>
+        <label for="usn">USN:</label>
+        <input type="text" id="usn" name="usn" required>
+        <label for="className">Class Name:</label>
+        <input type="text" id="className" name="className" required>
+        <button type="submit">Submit</button>
+      </form>
+    </body>
+    </html>
+  `);
+});
+
+app.post('/register', async (req, res) => {
+  try {
+    const { name, usn, className } = req.body;
+    
+    // Insert the new student into the students table
+    const insertQuery = `
+      INSERT INTO students (name, usn, class_name)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (usn) DO NOTHING;
+    `;
+    await client.query(insertQuery, [name, usn, className]);
+    
+    // Redirect the user back to the home page after successful registration
+    res.redirect('/');
+  } catch (error) {
+    console.error('Error registering student:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
 
 // Route to redirect to Teacher Dashboard
 app.get('/teacher-dashboard', (req, res) => {
