@@ -1,4 +1,4 @@
-# Attendance
+## Attendance
 Dependencies and Setup
 Dependencies:
 
