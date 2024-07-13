@@ -705,7 +705,7 @@ app.post('/submit', async (req, res) => {
         const subjectAttendanceField = `${className.toLowerCase()}_attendance`;
         const updateQuery = `
           UPDATE students
-          SET ${subjectTotalField} = ${subjectTotalField} + 1, ${subjectAttendanceField} = ${subjectAttendanceField} + 1
+          SET ${subjectAttendanceField} = ${subjectAttendanceField} + 1
           WHERE usn = $1
         `;
         await client.query(updateQuery, [usn]);
