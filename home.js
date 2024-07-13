@@ -372,9 +372,11 @@ app.get('/teacher-dashboard', (req, res) => {
 });
 
 // Endpoint to generate QR code based on class name
-app.post('/generate-qr', (req, res) => {
+app.post('/generate-qr', async (req, res) => {
   try {
     const className = req.body.className; // Get class name from request body
+    const subject = req.body.subject; // Assuming subject is also passed in the request body
+
     if (className !== currentSession.className) {
       currentClassName = className; // Update global current class name
       currentSession.className = className;
@@ -382,42 +384,20 @@ app.post('/generate-qr', (req, res) => {
       currentSession.tableName = `Department_${className}_${currentSession.timestamp.toISOString().replace(/[:.]/g, '-')}`;
       startQRCodeGenerationInterval(className); // Start a new interval with the updated class name
     }
-    // Generate the first QR code immediately
-    generateQRCode(className)
-      .then(qrCode => {
-        // Create table if it doesn't exist
-        const createTableQuery = `
-          CREATE TABLE IF NOT EXISTS "${currentSession.tableName}" (
-            id SERIAL PRIMARY KEY,
-            name VARCHAR(255),
-            usn VARCHAR(255),
-            device_fingerprint VARCHAR(255)
-          )
-        `;
-        client.query(createTableQuery)
-          .then(() => {
-            res.json({ qrCode });
-          })
-          .catch(err => {
-            console.error('Error creating table:', err);
-            res.status(500).send('Internal Server Error');
-          });
-      })
-      .catch(err => {
-        console.error('Error generating QR code:', err);
-        res.status(500).send('Internal Server Error');
-      });
-  } catch (error) {
-    console.error(`Error generating QR code:`, error);
-    res.status(500).send('Internal Server Error');
-  }
 
-  try {
-    console.log(`Generating QR code for class: ${className}, subject: ${subject}`);
+    // Generate the first QR code immediately
     const qrCode = await generateQRCode(className);
-    console.log("data is " + qrCode);
-    currentClassName = className;
-    startQRCodeGenerationInterval(className); // Start interval for the new class
+
+    // Create table if it doesn't exist
+    const createTableQuery = `
+      CREATE TABLE IF NOT EXISTS "${currentSession.tableName}" (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255),
+        usn VARCHAR(255),
+        device_fingerprint VARCHAR(255)
+      )
+    `;
+    await client.query(createTableQuery);
 
     // Update subject total field
     const subjectTotalField = `${subject.toLowerCase()}_total`;
@@ -429,11 +409,11 @@ app.post('/generate-qr', (req, res) => {
     await client.query(updateQuery, [className]);
 
     res.json({ qrCode });
+
   } catch (error) {
     console.error(`Error generating QR code for class ${className}, subject ${subject}:`, error);
     res.status(500).send('Internal Server Error');
   }
-  
 });
 
 // Endpoint to handle the QR code validation and show the form
