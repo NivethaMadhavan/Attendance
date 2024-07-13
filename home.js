@@ -264,6 +264,8 @@ app.get('/register', (req, res) => {
         <input type="text" id="usn" name="usn" required>
         <label for="className">Class Name:</label>
         <input type="text" id="className" name="className" required>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
         <button type="submit">Submit</button>
       </form>
     </body>
@@ -316,7 +318,7 @@ app.post('/login', async (req, res) => {
   const { usn, password } = req.body;
 
   try {
-    const result = await client.query('SELECT * FROM students WHERE usn = $1 AND password = $2', [usn, password]);
+    const result = await client.query('SELECT * FROM login_credentials WHERE usn = $1 AND password = $2', [usn, password]);
     if (result.rows.length > 0) {
       req.session.user = { usn: result.rows[0].usn, name: result.rows[0].name };
       res.redirect('/student-dashboard');
@@ -339,10 +341,6 @@ app.get('/logout', (req, res) => {
   });
 });
 
-app.get('/student-dashboard', isAuthenticated, (req, res) => {
-  res.send(`Welcome, ${req.session.user.name}!`);
-});
-
 app.post('/register', async (req, res) => {
   try {
     const { name, usn, className } = req.body;
@@ -354,6 +352,13 @@ app.post('/register', async (req, res) => {
       ON CONFLICT (usn) DO NOTHING;
     `;
     await client.query(insertQuery, [name, usn, className]);
+
+    const insertQuery2 = `
+      INSERT INTO login_credentials (usn,password)
+      VALUES ($1, $2)
+      ON CONFLICT (usn) DO NOTHING;
+    `;
+    await client.query(insertQuery2, [usn, password]);
     
     // Redirect the user back to the home page after successful registration
     res.redirect('/');
