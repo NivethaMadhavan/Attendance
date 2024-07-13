@@ -3,13 +3,6 @@ const qr = require('qrcode');
 const bodyParser = require('body-parser');
 const { Client } = require('pg');
 const ip = require('ip');
-const session = require('express-session');
-const pgSession = require('connect-pg-simple')(session);
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
 
 const app = express();
 let port = parseInt(process.env.PORT, 10) || 10000; // Default to 10000 if PORT is not set or invalid
@@ -44,27 +37,6 @@ const client = new Client({
 client.connect()
   .then(() => console.log('Connected to the database'))
   .catch(err => console.error('Error connecting to the database:', err));
-
-app.use(session({
-  store: new pgSession({
-    pool: pool,
-    createTableIfMissing: true// Your PostgreSQL client
-  }),
-  secret: 'your_secret_key', // Replace with a secure secret key
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
-  }
-}));
-
-function isAuthenticated(req, res, next) {
-  if (req.session.user) {
-    next();
-  } else {
-    res.redirect('/login');
-  }
-}
 
 // Function to generate the QR code
 async function generateQRCode(className) {
@@ -181,8 +153,6 @@ app.get('/', (req, res) => {
         <div class="btn-container">
           <a href="/teacher-dashboard" class="btn">Teacher Dashboard</a>
           <a href="/register" class="btn">Register</a>
-          <li><a href="/login">Login</a></li>
-          <li><a href="/student-dashboard">Student Dashboard</a></li>
         </div>
       </div>
     </body>
@@ -267,8 +237,6 @@ app.get('/register', (req, res) => {
         <input type="text" id="usn" name="usn" required>
         <label for="className">Class Name:</label>
         <input type="text" id="className" name="className" required>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
         <button type="submit">Submit</button>
       </form>
     </body>
@@ -276,94 +244,17 @@ app.get('/register', (req, res) => {
   `);
 });
 
-// Login route
-app.get('/login', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Login</title>
-    </head>
-    <body>
-      <h2>Login</h2>
-      <form action="/login" method="post">
-        <label for="usn">USN:</label>
-        <input type="text" id="usn" name="usn" required><br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br>
-        <button type="submit">Login</button>
-      </form>
-    </body>
-    </html>
-  `);
-});
-
-// Student Dashboard route
-app.get('/student-dashboard',isAuthenticated, (req, res) => {
-  const user = req.session.user;
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Student Dashboard</title>
-    </head>
-    <body>
-      <h2>Hello!</h2>
-      <a href="/logout">Logout</a>
-    </body>
-    </html>
-  `);
-});
-
-
-// Login route
-app.post('/login', async (req, res) => {
-  const { usn, password } = req.body;
-  res.send(`<p> ur usn is ${req.session.user.name} </p>`);
-
-  try {
-    const result = await client.query('SELECT * FROM login_credentials WHERE student_id = $1 AND password_hash = $2', [usn,password]);
-    if (result.rows.length > 0) {
-      if ( usn === result.rows[0].student_id && password === result.rows[0].password_hash ){
-           console.log(`Usn and password are:`,usn,password);
-           res.redirect('/student-dashboard');}
-    } else {
-      res.status(401).send('Invalid credentials');
-    }
-  } catch (err) {
-    console.error('Error logging in:', err);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
-// Logout route
-app.get('/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).send('Unable to log out');
-    }
-    res.redirect('/');
-  });
-});
-
 app.post('/register', async (req, res) => {
   try {
-    const { name, usn, className, password } = req.body;
+    const { name, usn, className } = req.body;
     
     // Insert the new student into the students table
     const insertQuery = `
       INSERT INTO students (name, usn, class_name)
       VALUES ($1, $2, $3)
-      ;
+      ON CONFLICT (usn) DO NOTHING;
     `;
     await client.query(insertQuery, [name, usn, className]);
-
-    const insertQuery2 = `
-      INSERT INTO login_credentials (student_id, password_hash)
-      VALUES ($1, $2)
-      ;
-    `;
-    await client.query(insertQuery2, [usn, password]);
     
     // Redirect the user back to the home page after successful registration
     res.redirect('/');
