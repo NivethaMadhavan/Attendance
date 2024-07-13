@@ -1,9 +1,9 @@
-## Attendance
-# Dependencies and Setup
-Dependencies:
+# Attendance
+## Dependencies and Setup
+### Dependencies:
 
-express: A web framework for Node.js.
-qrcode: A library to generate QR codes.
+#### express: A web framework for Node.js.
+#### qrcode: A library to generate QR codes.
 body-parser: Middleware to parse incoming request bodies.
 pg: PostgreSQL client for Node.js.
 ip: A library to get the server's IP address.
