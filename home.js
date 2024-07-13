@@ -294,7 +294,7 @@ app.get('/login', (req, res) => {
 });
 
 // Student Dashboard route
-app.get('/student-dashboard', isAuthenticated, (req, res) => {
+app.get('/student-dashboard', (req, res) => {
   res.send(`
     <!DOCTYPE html>
     <html>
