@@ -343,7 +343,7 @@ app.get('/logout', (req, res) => {
 
 app.post('/register', async (req, res) => {
   try {
-    const { name, usn, className } = req.body;
+    const { name, usn, className, password } = req.body;
     
     // Insert the new student into the students table
     const insertQuery = `
