@@ -547,7 +547,6 @@ app.post('/generate-qr', async (req, res) => {
     const updateQuery = `
       UPDATE students
       SET ${subjectTotalField} = ${subjectTotalField} + 1
-      WHERE class_name = $1
     `;
     await client.query(updateQuery, [className]);
 
