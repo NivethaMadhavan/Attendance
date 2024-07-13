@@ -548,7 +548,7 @@ app.post('/generate-qr', async (req, res) => {
       UPDATE students
       SET ${subjectTotalField} = ${subjectTotalField} + 1
     `;
-    await client.query(updateQuery, [className]);
+    await client.query(updateQuery);
 
     res.json({ qrCode });
 
