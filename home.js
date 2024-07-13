@@ -527,12 +527,12 @@ app.post('/generate-qr', async (req, res) => {
 
     const subjectTotalField = `${className.toLowerCase()}_total`;
     console.log(subjectTotalField);
-    const updateQuery = `
+    const updateQuery1 = `
       UPDATE students
       SET ${subjectTotalField} = ${subjectTotalField} + 1
       WHERE class_name = $1
     `;
-    await client.query(updateQuery, [className]);
+    await client.query(updateQuery1, [className]);
 
     // Generate the first QR code immediately
     const qrCode = await generateQRCode(className);
