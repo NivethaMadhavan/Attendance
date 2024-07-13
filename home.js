@@ -317,7 +317,8 @@ app.post('/login', async (req, res) => {
   try {
     const result = await client.query('SELECT * FROM login_credentials WHERE student_id = $1 AND password_hash = $2', [usn,password]);
     if (result.rows.length > 0) {
-      req.session.user = { usn: result.rows[0].student_id, name: result.rows[0].password_hash};
+      req.session.user = { usn: result.rows[0].student_id, password: result.rows[0].password_hash};
+      console.log(`Usn and password are:`,usn,password);
       res.redirect('/student-dashboard');
     } else {
       res.status(401).send('Invalid credentials');
