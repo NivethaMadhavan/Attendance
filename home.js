@@ -160,7 +160,6 @@ app.get('/latest-qr-code-org', async (req, res) => {
 
 // Endpoint to generate the QR code for the home page
 app.get('/', (req, res) => {
-  res.send(`<p> ur usn is ${req.session.user.name} </p>`);
   res.send(`
     <!DOCTYPE html>
     <html lang="en">
