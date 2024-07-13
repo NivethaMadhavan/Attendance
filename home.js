@@ -357,7 +357,7 @@ app.post('/register', async (req, res) => {
       VALUES ($1, $2)
       ON CONFLICT (usn) DO NOTHING;
     `;
-    await client.query(insertQuery2, [usn, password]);
+    await client.query(insertQuery2, [student_id, password_hash]);
     
     // Redirect the user back to the home page after successful registration
     res.redirect('/');
