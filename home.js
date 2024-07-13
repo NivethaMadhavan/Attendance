@@ -401,6 +401,7 @@ app.post('/generate-qr', async (req, res) => {
 
     // Update subject total field
     const subjectTotalField = `${className.toLowerCase()}_total`;
+    console.log(subjectTotalField);
     const updateQuery = `
       UPDATE students
       SET ${subjectTotalField} = ${subjectTotalField} + 1
