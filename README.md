@@ -2,7 +2,8 @@
 ## Dependencies and Setup
 ### Dependencies:
 
-#### express: A web framework for Node.js.
+#### express: ####
+A web framework for Node.js.
 #### qrcode: A library to generate QR codes.
 body-parser: Middleware to parse incoming request bodies.
 pg: PostgreSQL client for Node.js.
