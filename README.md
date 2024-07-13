@@ -1,5 +1,5 @@
 ## Attendance
-Dependencies and Setup
+# Dependencies and Setup
 Dependencies:
 
 express: A web framework for Node.js.
