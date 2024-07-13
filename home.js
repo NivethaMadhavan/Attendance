@@ -42,7 +42,8 @@ client.connect()
 
 app.use(session({
   store: new pgSession({
-    pool: client // Your PostgreSQL client
+    pool: client,
+    createTableIfMissing: true// Your PostgreSQL client
   }),
   secret: 'your_secret_key', // Replace with a secure secret key
   resave: false,
