@@ -175,6 +175,8 @@ app.get('/', (req, res) => {
         <div class="btn-container">
           <a href="/teacher-dashboard" class="btn">Teacher Dashboard</a>
           <a href="/register" class="btn">Register</a>
+          <li><a href="/login">Login</a></li>
+          <li><a href="/student-dashboard">Student Dashboard</a></li>
         </div>
       </div>
     </body>
