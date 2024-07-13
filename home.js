@@ -304,8 +304,7 @@ app.get('/student-dashboard', isAuthenticated, (req, res) => {
       <title>Student Dashboard</title>
     </head>
     <body>
-      <h2>Welcome, ${req.session.user.name}!</h2>
-      <p>Your USN: ${req.session.user.usn}</p>
+      <h2>Hello!</h2>
       <a href="/logout">Logout</a>
     </body>
     </html>
@@ -318,7 +317,7 @@ app.post('/login', async (req, res) => {
   const { usn, password } = req.body;
 
   try {
-    const result = await client.query('SELECT * FROM login_credentials WHERE usn = $1 AND password = $2', [usn, password]);
+    const result = await client.query('SELECT * FROM login_credentials WHERE usn = $1 AND password = $2', [student_id,password_hash]);
     if (result.rows.length > 0) {
       req.session.user = { usn: result.rows[0].usn, name: result.rows[0].name };
       res.redirect('/student-dashboard');
