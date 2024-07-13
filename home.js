@@ -295,6 +295,7 @@ app.get('/login', (req, res) => {
 
 // Student Dashboard route
 app.get('/student-dashboard', (req, res) => {
+  const user = req.session.user;
   res.send(`
     <!DOCTYPE html>
     <html>
@@ -303,6 +304,7 @@ app.get('/student-dashboard', (req, res) => {
     </head>
     <body>
       <h2>Hello!</h2>
+      <p> ur usn is ${user.name} </p>
       <a href="/logout">Logout</a>
     </body>
     </html>
