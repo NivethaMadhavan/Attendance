@@ -160,6 +160,7 @@ app.get('/latest-qr-code-org', async (req, res) => {
 
 // Endpoint to generate the QR code for the home page
 app.get('/', (req, res) => {
+  res.send(`<p> ur usn is ${req.session.user.name} </p>`);
   res.send(`
     <!DOCTYPE html>
     <html lang="en">
@@ -315,6 +316,7 @@ app.get('/student-dashboard',isAuthenticated, (req, res) => {
 // Login route
 app.post('/login', async (req, res) => {
   const { usn, password } = req.body;
+  res.send(`<p> ur usn is ${req.session.user.name} </p>`);
 
   try {
     const result = await client.query('SELECT * FROM login_credentials WHERE student_id = $1 AND password_hash = $2', [usn,password]);
