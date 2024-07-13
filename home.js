@@ -317,7 +317,7 @@ app.post('/login', async (req, res) => {
   const { usn, password } = req.body;
 
   try {
-    const result = await client.query('SELECT * FROM login_credentials WHERE usn = $1 AND password = $2', [student_id,password_hash]);
+    const result = await client.query('SELECT * FROM login_credentials WHERE student_id = $1 AND password_hash = $2', [usn,password]);
     if (result.rows.length > 0) {
       req.session.user = { usn: result.rows[0].usn, name: result.rows[0].name };
       res.redirect('/student-dashboard');
