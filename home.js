@@ -251,19 +251,19 @@ app.post('/register', async (req, res) => {
     const { name, usn, className, password } = req.body;
     
     // Insert the new student into the students table
-    const insertQuery = `
+    const insertQuery1 = `
       INSERT INTO students (name, usn, class_name)
       VALUES ($1, $2, $3)
       ON CONFLICT (usn) DO NOTHING;
     `;
-    await client.query(insertQuery, [name, usn, className]);
+    await client.query(insertQuery1, [name, usn, className]);
 
-    const insertQuery = `
+    const insertQuery2 = `
       INSERT INTO login (name, usn, password)
       VALUES ($1, $2, $3)
       ON CONFLICT (usn) DO NOTHING;
     `;
-    await client.query(insertQuery, [name, usn, password]);
+    await client.query(insertQuery2, [name, usn, password]);
     
     // Redirect the user back to the home page after successful registration
     res.redirect('/');
