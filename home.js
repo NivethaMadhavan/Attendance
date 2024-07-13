@@ -9,19 +9,6 @@ const pgSession = require('connect-pg-simple')(session);
 const app = express();
 let port = parseInt(process.env.PORT, 10) || 10000; // Default to 10000 if PORT is not set or invalid
 
-app.use(session({
-  store: new pgSession({
-    pool: client // Your PostgreSQL client
-  }),
-  secret: 'your_secret_key', // Replace with a secure secret key
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
-  }
-}));
-
-
 // Ensure the port is within the valid range
 if (port < 0 || port > 65535) {
   console.error(`Invalid port number: ${port}. Falling back to default port 10000.`);
@@ -53,6 +40,18 @@ client.connect()
   .then(() => console.log('Connected to the database'))
   .catch(err => console.error('Error connecting to the database:', err));
 
+app.use(session({
+  store: new pgSession({
+    pool: client // Your PostgreSQL client
+  }),
+  secret: 'your_secret_key', // Replace with a secure secret key
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+  }
+}));
+
 function isAuthenticated(req, res, next) {
   if (req.session.user) {
     next();
@@ -60,6 +59,9 @@ function isAuthenticated(req, res, next) {
     res.redirect('/login');
   }
 }
+
+
+
 
 // Function to generate the QR code
 async function generateQRCode(className) {
