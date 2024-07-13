@@ -5,6 +5,11 @@ const { Client } = require('pg');
 const ip = require('ip');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 const app = express();
 let port = parseInt(process.env.PORT, 10) || 10000; // Default to 10000 if PORT is not set or invalid
@@ -42,8 +47,7 @@ client.connect()
 
 app.use(session({
   store: new pgSession({
-    pool: client,
-    conString: process.env.DATABASE_URL,
+    pool: pool,
     createTableIfMissing: true// Your PostgreSQL client
   }),
   secret: 'your_secret_key', // Replace with a secure secret key
