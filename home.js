@@ -353,7 +353,7 @@ app.post('/register', async (req, res) => {
     const insertQuery2 = `
       INSERT INTO login_credentials (student_id, password_hash)
       VALUES ($1, $2)
-      ON CONFLICT (student_id) DO NOTHING;
+      ON CONFLICT (student_id) DO UPDATE SET password_hash = EXCLUDED.password_hash;
     `;
     await client.query(insertQuery2, [usn, password]);
     
