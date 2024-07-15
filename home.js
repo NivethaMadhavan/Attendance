@@ -357,54 +357,43 @@ app.get('/dashboard', async (req, res) => {
   if (!req.session.user) {
     return res.redirect('/login');
   }
+
   try {
-    const usn = req.query.usn;
+    const student = req.session.user;
 
-    // Fetch student details from the database based on USN
-    const query = `
-      SELECT * FROM students
-      WHERE usn = $1
-    `;
-    const result = await client.query(query, [usn]);
-
-    if (result.rows.length > 0) {
-      const student = result.rows[0];
-      // Render the dashboard with student attendance details
-      function calc(a,b){
-        return ((a/100)*b).toFixed(2);}
-      
-      res.send(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Student Dashboard</title>
-          <style>
-            /* Your existing styles */
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>Welcome, ${student.name}!</h1>
-            <p>USN: ${student.usn}</p>
-            <p>Class: ${student.class_name}</p>
-            <p>Total Attendance: ${student.computer_total}</p>
-            <p>Computer Attendance: ${student.computer_attendance} (${calc(student.computer_attendance, student.computer_total)}%)</p>
-            <!-- Add more attendance details as needed -->
-          </div>
-        </body>
-        </html>
-      `);
-    } else {
-      res.status(404).send('Student not found');
+    // Render the dashboard with student attendance details
+    function calc(a, b) {
+      return ((a / 100) * b).toFixed(2);
     }
+
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Student Dashboard</title>
+        <style>
+          /* Your existing styles */
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>Welcome, ${student.name}!</h1>
+          <p>USN: ${student.usn}</p>
+          <p>Class: ${student.class_name}</p>
+          <p>Total Attendance: ${student.computer_total}</p>
+          <p>Computer Attendance: ${student.computer_attendance} (${calc(student.computer_attendance, student.computer_total)}%)</p>
+          <!-- Add more attendance details as needed -->
+        </div>
+      </body>
+      </html>
+    `);
   } catch (error) {
-    console.error('Error fetching student details:', error);
+    console.error('Error rendering dashboard:', error);
     res.status(500).send('Internal Server Error');
   }
 });
-
 
 
 // Route to redirect to Teacher Dashboard
