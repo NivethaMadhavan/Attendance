@@ -3,48 +3,38 @@ const qr = require('qrcode');
 const bodyParser = require('body-parser');
 const { Client } = require('pg');
 const ip = require('ip');
-
 const app = express();
 let port = parseInt(process.env.PORT, 10) || 10000; // Default to 10000 if PORT is not set or invalid
-
 // Ensure the port is within the valid range
 if (port < 0 || port > 65535) {
   console.error(`Invalid port number: ${port}. Falling back to default port 10000.`);
   port = 10000;
 }
-
 const localip = ip.address();
 let qrCodeCounter = 0;
 let currentClassName = 'defaultClassName'; // Initial class name
 let intervalId = null; // To store the interval ID
-
 // Store session information
 let currentSession = {
   className: null,
   timestamp: null,
   tableName: null,
 };
-
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-
 const connectionString = process.env.DB_URI_INTERNAL;
-
 const client = new Client({
   connectionString: connectionString,
 });
-
 client.connect()
   .then(() => console.log('Connected to the database'))
   .catch(err => console.error('Error connecting to the database:', err));
-
 // Function to generate the QR code
 async function generateQRCode(className) {
   const randomComponent = Math.floor(Math.random() * 1000);
   const timestamp = new Date().getTime();
   const cloudURL = `https://attendance-4au9.onrender.com/submit`;
   const qrCodeData = `${cloudURL}?qrcode=${qrCodeCounter}&timestamp=${timestamp}_${randomComponent}&className=${className}`;
-
   return new Promise((resolve, reject) => {
     qr.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, qrCode) => {
       if (err) {
@@ -57,35 +47,6 @@ async function generateQRCode(className) {
     });
   });
 }
-
-app.get('/login', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Login</title>
-      <style>
-        /* Your existing styles */
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h1>Login</h1>
-        <form action="/login" method="post">
-          <label for="usn">USN:</label>
-          <input type="text" id="usn" name="usn" required>
-          <label for="password">Password:</label>
-          <input type="password" id="password" name="password" required>
-          <button type="submit">Login</button>
-        </form>
-      </div>
-    </body>
-    </html>`
-  );
-});
-
 // Function to periodically generate new QR code
 function startQRCodeGenerationInterval(className) {
   if (intervalId !== null) {
@@ -101,9 +62,7 @@ function startQRCodeGenerationInterval(className) {
     })
     .catch(err => console.error('Error generating QR code during interval:', err));
 }, 30000);
-
 }
-
 // Endpoint to serve the latest QR code image
 app.get('/latest-qr-code', async (req, res) => {
   try {
@@ -115,7 +74,6 @@ app.get('/latest-qr-code', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
 app.get('/latest-qr-code-org', async (req, res) => {
   try {
     console.log("Generating QR Code for client - counter is "+qrCodeCounter);
@@ -150,7 +108,6 @@ app.get('/latest-qr-code-org', async (req, res) => {
                 setTimeout(refreshQRCode, 30000); // Refresh every 30 seconds
               });
           }
-
           refreshQRCode(); // Initial call to start refreshing
         </script>
       </body>
@@ -161,7 +118,6 @@ app.get('/latest-qr-code-org', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
 // Endpoint to generate the QR code for the home page
 app.get('/', (req, res) => {
   res.send(`
@@ -181,26 +137,53 @@ app.get('/', (req, res) => {
         <div class="btn-container">
           <a href="/teacher-dashboard" class="btn">Teacher Dashboard</a>
           <a href="/register" class="btn">Register</a>
-          <a href="/dashboard" class="btn">Student Dashboard</a>
+          <a href="/login" class="btn">Student Dashboard</a>
         </div>
       </div>
     </body>
-    </html>`
-  );
+    </html>
+  `);
+});
+
+// Endpoint to serve the login page
+app.get('/login', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Login</title>
+      <style>
+        /* Your existing styles */
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>Login</h1>
+        <form action="/login" method="post">
+          <label for="usn">USN:</label>
+          <input type="text" id="usn" name="usn" required>
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required>
+          <button type="submit">Login</button>
+        </form>
+      </div>
+    </body>
+    </html>
+  `);
 });
 
 // Endpoint to handle login form submission
 app.post('/login', async (req, res) => {
   try {
     const { usn, password } = req.body;
-
     // Query to check if the credentials match
     const query = `
       SELECT * FROM login
       WHERE usn = $1 AND password = $2
     `;
     const result = await client.query(query, [usn, password]);
-
     if (result.rows.length > 0) {
       // If credentials are correct, redirect to the student dashboard
       res.redirect(`/dashboard?usn=${usn}`);
@@ -213,18 +196,15 @@ app.post('/login', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
 app.post('/login', async (req, res) => {
   try {
     const { usn, password } = req.body;
-
     // Query to check if the credentials match
     const query = `
       SELECT * FROM login
       WHERE usn = $1 AND password = $2
     `;
     const result = await client.query(query, [usn, password]);
-
     if (result.rows.length > 0) {
       // If credentials are correct, redirect to the student dashboard
       res.redirect(`/dashboard?usn=${usn}`);
@@ -237,7 +217,6 @@ app.post('/login', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
 app.get('/register', (req, res) => {
   res.send(`
     <!DOCTYPE html>
@@ -323,7 +302,6 @@ app.get('/register', (req, res) => {
     </html>
   `);
 });
-
 app.post('/register', async (req, res) => {
   try {
     const { name, usn, className, password } = req.body;
@@ -336,7 +314,6 @@ app.post('/register', async (req, res) => {
       ON CONFLICT (usn) DO NOTHING;
     `;
     await client.query(insertQuery1, [name, usn, className]);
-
     const insertQuery2 = `
       INSERT INTO login (name, usn, password)
       VALUES ($1, $2, $3)
@@ -351,51 +328,53 @@ app.post('/register', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
 // Endpoint to serve the student dashboard
 app.get('/dashboard', async (req, res) => {
-  if (!req.session.user) {
-    return res.redirect('/login');
-  }
-
   try {
-    const student = req.session.user;
-
-    // Render the dashboard with student attendance details
-    function calc(a, b) {
-      return ((a / 100) * b).toFixed(2);
+    const usn = req.query.usn;
+    // Fetch student details from the database based on USN
+    const query = `
+      SELECT * FROM students
+      WHERE usn = $1
+    `;
+    const result = await client.query(query, [usn]);
+    if (result.rows.length > 0) {
+      const student = result.rows[0];
+      // Render the dashboard with student attendance details
+      function calc(a,b){
+        return ((a/100)*b).toFixed(2);}
+      
+      res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Student Dashboard</title>
+          <style>
+            /* Your existing styles */
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>Welcome, ${student.name}!</h1>
+            <p>USN: ${student.usn}</p>
+            <p>Class: ${student.class_name}</p>
+            <p>Total Attendance: ${student.computer_total}</p>
+            <p>Computer Attendance: ${student.computer_attendance} (${calc(student.computer_attendance, student.computer_total)}%)</p>
+            <!-- Add more attendance details as needed -->
+          </div>
+        </body>
+        </html>
+      `);
+    } else {
+      res.status(404).send('Student not found');
     }
-
-    res.send(`
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Student Dashboard</title>
-        <style>
-          /* Your existing styles */
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <h1>Welcome, ${student.name}!</h1>
-          <p>USN: ${student.usn}</p>
-          <p>Class: ${student.class_name}</p>
-          <p>Total Attendance: ${student.computer_total}</p>
-          <p>Computer Attendance: ${student.computer_attendance} (${calc(student.computer_attendance, student.computer_total)}%)</p>
-          <!-- Add more attendance details as needed -->
-        </div>
-      </body>
-      </html>
-    `);
   } catch (error) {
-    console.error('Error rendering dashboard:', error);
+    console.error('Error fetching student details:', error);
     res.status(500).send('Internal Server Error');
   }
 });
-
-
 // Route to redirect to Teacher Dashboard
 app.get('/teacher-dashboard', (req, res) => {
   res.send(`
@@ -432,7 +411,6 @@ app.get('/teacher-dashboard', (req, res) => {
       <script>
         // JavaScript part of your teacher dashboard HTML
         let currentClassName = 'Computer'; // Initial class name
-
         function generateQRCode(className) {
           fetch('/generate-qr', {
             method: 'POST',
@@ -451,7 +429,6 @@ app.get('/teacher-dashboard', (req, res) => {
           })
           .catch(error => console.error('Error generating QR code:', error));
         }
-
         // Function to refresh the QR code every 30 seconds
         function refreshQRCode() {
           fetch('/latest-qr-code', {
@@ -468,7 +445,6 @@ app.get('/teacher-dashboard', (req, res) => {
           .catch(error => console.error('Error generating QR code:', error));
 //          generateQRCode(currentClassName); // Call generateQRCode with current class name
         }
-
         function initPage(){
        
           
@@ -477,7 +453,6 @@ app.get('/teacher-dashboard', (req, res) => {
           generateQRCode('computer');
           setInterval(refreshQRCode, 30000);
         });
-
         document.getElementById('btnClassB').addEventListener('click', () => {
           generateQRCode('math');
           setInterval(refreshQRCode, 30000);
@@ -501,13 +476,11 @@ app.get('/teacher-dashboard', (req, res) => {
     </html>
   `);
 });
-
 // Endpoint to generate QR code based on class name
 app.post('/generate-qr', async (req, res) => {
   try {
     const className = req.body.className; // Get class name from request body
     const subject = req.body.className; // Assuming subject is also passed in the request body
-
     if (className !== currentSession.className) {
       currentClassName = className; // Update global current class name
       currentSession.className = className;
@@ -515,12 +488,9 @@ app.post('/generate-qr', async (req, res) => {
       currentSession.tableName = `Department_${className}_${currentSession.timestamp.toISOString().replace(/[:.]/g, '-')}`;
       startQRCodeGenerationInterval(className); // Start a new interval with the updated class name
     }
-
      const subjectTotalField = `${className.toLowerCase()}_total`;
-
     // Generate the first QR code immediately
     const qrCode = await generateQRCode(className);
-
     // Create table if it doesn't exist
     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS "${currentSession.tableName}" (
@@ -531,30 +501,24 @@ app.post('/generate-qr', async (req, res) => {
       )
     `;
     await client.query(createTableQuery);
-
     // Update subject total field
     console.log(subjectTotalField);
-
     const updateQuery = `
       UPDATE students
       SET ${subjectTotalField} = ${subjectTotalField} + 1
     `;
     await client.query(updateQuery);
-
     res.json({ qrCode });
-
   } catch (error) {
     console.error(`Error generating QR code for class ${className}:`, error);
     res.status(500).send('Internal Server Error');
   }
 });
-
 // Endpoint to handle the QR code validation and show the form
 app.get('/submit', async (req, res) => {
   try {
     const requestedQrCode = parseInt(req.query.qrcode);
     const className = req.query.className; // Get className from query
-
     if (qrCodeCounter !== requestedQrCode) {
       res.send('Rejected');
       console.log(`Received qr code : "${requestedQrCode}", Current qr code : "${qrCodeCounter}"`);
@@ -665,26 +629,22 @@ app.get('/submit', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
 // POST route handler for form submission
 app.post('/submit', async (req, res) => {
   try {
     const requestedQrCode = parseInt(req.body.qrcode);
     const clientFingerprint = req.body.clientFingerprint;
     const { name, usn, className } = req.body;
-
     if (!clientFingerprint) {
       res.status(400).send('Bad Request: Missing client fingerprint');
       return;
     }
-
     if (qrCodeCounter === requestedQrCode) {
       // Check if the fingerprint is already in the table
       const checkQuery = `
         SELECT COUNT(*) AS count FROM "${currentSession.tableName}" WHERE device_fingerprint = $1
       `;
       const checkResult = await client.query(checkQuery, [clientFingerprint]);
-
       if (checkResult.rows[0].count > 0) {
         res.send('Form submission rejected: Fingerprint already submitted');
       } else {
@@ -712,7 +672,6 @@ app.post('/submit', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on http://0.0.0.0:${port}`);
 });
