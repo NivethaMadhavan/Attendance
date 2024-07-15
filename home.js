@@ -137,30 +137,6 @@ app.get('/latest-qr-code-org', async (req, res) => {
 // Endpoint to generate the QR code for the home page
 app.get('/', (req, res) => {
   res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Home</title>
-      <style>
-        /* Your existing styles */
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h1>Welcome to Home</h1>
-        <div class="btn-container">
-          <a href="/teacher-dashboard" class="btn">Teacher Dashboard</a>
-          <a href="/register" class="btn">Register</a>
-          <a href="/login" class="btn">Student Dashboard</a>
-        </div>
-      </div>
-    </body>
-    </html>
-  `);
-});
-
 // Endpoint to serve the login page
 <!DOCTYPE html>
 <html lang="en">
