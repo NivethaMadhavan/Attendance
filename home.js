@@ -59,7 +59,7 @@ async function generateQRCode(className) {
 }
 
 app.get('/login', (req, res) => {
-  res.send(
+  res.send(`
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -82,7 +82,7 @@ app.get('/login', (req, res) => {
         </form>
       </div>
     </body>
-    </html>
+    </html>`
   );
 });
 
@@ -164,7 +164,7 @@ app.get('/latest-qr-code-org', async (req, res) => {
 
 // Endpoint to generate the QR code for the home page
 app.get('/', (req, res) => {
-  res.send(
+  res.send(`
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -185,7 +185,7 @@ app.get('/', (req, res) => {
         </div>
       </div>
     </body>
-    </html>
+    </html>`
   );
 });
 
