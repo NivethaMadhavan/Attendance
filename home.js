@@ -354,6 +354,9 @@ app.post('/register', async (req, res) => {
 
 // Endpoint to serve the student dashboard
 app.get('/dashboard', async (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
   try {
     const usn = req.query.usn;
 
