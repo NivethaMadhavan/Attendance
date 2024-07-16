@@ -158,9 +158,10 @@ app.get('/login', (req, res) => {
       <title>Login</title>
       <style>
         body {
-          background-image: url('https://i.pinimg.com/736x/e8/a6/23/e8a623c62fce7422009e0c64b91055e1.jpg');
+          background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlhLvbLw-Xn1AqiQeO9q_F1kh-g5x4WRYsPdpVo1QEbZh-jE5AovmY0qArzpbxSoC0Piw&usqp=CAU');
           background-size: cover;
           background-repeat: no-repeat;
+          background-position: center;
           background-attachment: fixed;
           color: #ffffff;
           font-family: Arial, sans-serif;
@@ -175,6 +176,9 @@ app.get('/login', (req, res) => {
           padding: 20px;
           border-radius: 8px;
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+          max-width: 400px;
+          width: 100%;
+          box-sizing: border-box;
         }
         h1 {
           margin-bottom: 20px;
