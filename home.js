@@ -136,7 +136,9 @@ app.get('/', (req, res) => {
         <h1>Welcome to Home</h1>
         <div class="btn-container">
           <a href="/teacher-dashboard" class="btn">Teacher Dashboard</a>
+          <br>
           <a href="/register" class="btn">Register</a>
+          <br>
           <a href="/login" class="btn">Student Dashboard</a>
         </div>
       </div>
@@ -155,7 +157,53 @@ app.get('/login', (req, res) => {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Login</title>
       <style>
-        /* Your existing styles */
+        body {
+          background-image: url('https://i.pinimg.com/736x/e8/a6/23/e8a623c62fce7422009e0c64b91055e1.jpg');
+          background-size: cover;
+          background-repeat: no-repeat;
+          background-attachment: fixed;
+          color: #ffffff;
+          font-family: Arial, sans-serif;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          margin: 0;
+        }
+        .container {
+          background-color: rgba(30, 30, 30, 0.85);
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+          margin-bottom: 20px;
+        }
+        label {
+          display: block;
+          margin-bottom: 8px;
+        }
+        input {
+          width: 100%;
+          padding: 8px;
+          margin-bottom: 16px;
+          border: 1px solid #333;
+          border-radius: 4px;
+          background-color: #333;
+          color: #ffffff;
+        }
+        button {
+          width: 100%;
+          padding: 10px;
+          background-color: #6200ea;
+          color: #ffffff;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+        button:hover {
+          background-color: #3700b3;
+        }
       </style>
     </head>
     <body>
