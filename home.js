@@ -158,7 +158,7 @@ app.get('/login', (req, res) => {
       <title>Login</title>
       <style>
         body {
-          background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlhLvbLw-Xn1AqiQeO9q_F1kh-g5x4WRYsPdpVo1QEbZh-jE5AovmY0qArzpbxSoC0Piw&usqp=CAU');
+          background-image: url('https://www.bhmpics.com/downloads/tangled-floating-lanterns-desktop-wallpaper-/2.56cf746fc6f12de43b95b1500aaa928d.jpg');
           background-size: cover;
           background-repeat: no-repeat;
           background-position: center;
