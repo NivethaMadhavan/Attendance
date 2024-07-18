@@ -61,7 +61,7 @@ function startQRCodeGenerationInterval(className) {
       // Optionally do something with the newly generated QR code
     })
     .catch(err => console.error('Error generating QR code during interval:', err));
-}, 31000);
+}, 30000);
 }
 
 // Endpoint to serve the latest QR code image
