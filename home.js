@@ -61,8 +61,9 @@ function startQRCodeGenerationInterval(className) {
       // Optionally do something with the newly generated QR code
     })
     .catch(err => console.error('Error generating QR code during interval:', err));
-}, 30000);
+}, 31000);
 }
+
 // Endpoint to serve the latest QR code image
 app.get('/latest-qr-code', async (req, res) => {
   try {
@@ -74,50 +75,7 @@ app.get('/latest-qr-code', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-app.get('/latest-qr-code-org', async (req, res) => {
-  try {
-    console.log("Generating QR Code for client - counter is "+qrCodeCounter);
-    const qrCode = await generateQRCode(currentClassName);
-    res.send(`
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Latest QR Code</title>
-        <style>
-          /* Your existing styles */
-        </style>
-      </head>
-      <body>
-        <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
-          <img id="qrCodeImg" src="${qrCode}" alt="QR Code ${qrCodeCounter}" style="border: 2px solid #000; padding: 10px; background-color: #fff;" />
-        </div>
-        <script>
-          function refreshQRCode() {
-            fetch('/latest-qr-code')
-              .then(response => response.text())
-              .then(data => {
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = data;
-                const newQRCodeImg = tempDiv.querySelector('#qrCodeImg');
-                document.getElementById('qrCodeImg').src = newQRCodeImg.src;
-              })
-              .catch(error => console.error('Error fetching QR code:', error))
-              .finally(() => {
-                setTimeout(refreshQRCode, 30000); // Refresh every 30 seconds
-              });
-          }
-          refreshQRCode(); // Initial call to start refreshing
-        </script>
-      </body>
-      </html>
-    `);
-  } catch (error) {
-    console.error(`Error generating QR code:`, error);
-    res.status(500).send('Internal Server Error');
-  }
-});
+
 // Endpoint to generate the QR code for the home page
 app.get('/', (req, res) => {
   res.send(`
@@ -497,9 +455,8 @@ app.get('/teacher-dashboard', (req, res) => {
           .catch(error => console.error('Error generating QR code:', error));
 //          generateQRCode(currentClassName); // Call generateQRCode with current class name
         }
-        function initPage(){
-       
-          
+        
+        function initPage(){  
         // Event listeners for buttons to change the class name
         document.getElementById('btnClassA').addEventListener('click', () => {
           generateQRCode('computer');
