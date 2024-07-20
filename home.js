@@ -147,7 +147,7 @@ app.get('/login', (req, res) => {
           margin-bottom: 8px;
         }
         input {
-          width: 100%;
+          width: 70%;
           padding: 8px;
           margin-bottom: 16px;
           border: 1px solid #333;
@@ -156,7 +156,7 @@ app.get('/login', (req, res) => {
           color: #ffffff;
         }
         button {
-          width: 100%;
+          width: 70%;
           padding: 10px;
           background-color: #6200ea;
           color: #ffffff;
