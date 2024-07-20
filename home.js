@@ -91,7 +91,7 @@ app.get('/', (req, res) => {
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           background-color: teal;
           background-size: contain;
-          background-image:url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQifdowBVErn3XfDRk174_fJu_6xT5uXcbABA&s') ;
+          background-image:url('https://i.pinimg.com/originals/ff/3a/94/ff3a942d7d5cb0f96c1978f97e41dc28.jpg') ;
           background-position: center;
           margin: 0;
           padding: 0;
