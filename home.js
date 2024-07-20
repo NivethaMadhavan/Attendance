@@ -89,9 +89,11 @@ app.get('/', (req, res) => {
         /* Your existing styles */
         body {
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background-size: contain;
+          background-attachment: fixed;
           background-image:url('https://e0.pxfuel.com/wallpapers/726/692/desktop-wallpaper-minimalism-anime-art-my-neighbor-totoro-totoro-minimalist-totoro.jpg') ;
           background-position: center;
+          background-size: cover;
+          background-repeat: no-repeat;
           margin: 0;
           padding: 0;
           display: flex;
@@ -594,9 +596,11 @@ app.get('/submit', async (req, res) => {
           <head>
           <style>
             body {
-              background-size: contain;
+              background-attachment: fixed;
               background-image:url('https://e0.pxfuel.com/wallpapers/726/692/desktop-wallpaper-minimalism-anime-art-my-neighbor-totoro-totoro-minimalist-totoro.jpg') ;
               background-position: center;
+              background-size: cover;
+              background-repeat: no-repeat;
               margin: 0;
               padding: 0;
               display: flex;
