@@ -370,7 +370,21 @@ app.get('/dashboard', async (req, res) => {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Student Dashboard</title>
           <style>
-            /* Your existing styles */
+            body{
+               background-image:url('https://e1.pxfuel.com/desktop-wallpaper/62/975/desktop-wallpaper-anime-cloudy-sky-backgrounds-beautiful-cloudy-sky-anime.jpg');
+               background-size: cover;
+               background-repeat: no-repeat;
+               background-position: center;
+               background-attachment: fixed;
+               color: #ffffff;
+               font-family: Arial, sans-serif;
+               display: flex;
+               justify-content: center;
+               align-items: center;
+               height: 100vh;
+               width: 100vw;
+               margin: 0;
+               }
           </style>
         </head>
         <body>
@@ -568,9 +582,8 @@ app.get('/submit', async (req, res) => {
           <style>
             body {
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              background-color: teal;
               background-size: contain;
-              background-image: url('https://assets.hongkiat.com/uploads/cartoonic-mobile-wallpapers/preview/cartoonic-mobile-wallpaper-34.jpg') fixed;
+              background-image: url('https://assets.hongkiat.com/uploads/cartoonic-mobile-wallpapers/preview/cartoonic-mobile-wallpaper-34.jpg');
               background-position: center;
               margin: 0;
               padding: 0;
