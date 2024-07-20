@@ -136,7 +136,7 @@ app.get('/login', (req, res) => {
           border-radius: 8px;
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
           max-width: 400px;
-          width: 100%;
+          width: 70%;
           box-sizing: border-box;
         }
         h1 {
