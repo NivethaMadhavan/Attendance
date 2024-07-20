@@ -127,6 +127,7 @@ app.get('/login', (req, res) => {
           justify-content: center;
           align-items: center;
           height: 100vh;
+          width: 100vw;
           margin: 0;
         }
         .container {
