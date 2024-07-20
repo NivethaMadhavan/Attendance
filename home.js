@@ -139,12 +139,14 @@ app.get('/login', (req, res) => {
           width: 70%;
           align: center;
           align-items: center;
+          text-align: center;
           box-sizing: border-box;
         }
         h1 {
           margin-bottom: 20px;
         }
         label {
+          text-align: left;
           display: block;
           margin-bottom: 8px;
         }
@@ -157,6 +159,7 @@ app.get('/login', (req, res) => {
           align: center;
           background-color: #333;
           color: #ffffff;
+          box-sizing: border-box;
         }
         button {
           width: 70%;
@@ -166,6 +169,7 @@ app.get('/login', (req, res) => {
           border: none;
           border-radius: 4px;
           cursor: pointer;
+          box-sizing: border-box;
         }
         button:hover {
           background-color: #3700b3;
