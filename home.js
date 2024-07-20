@@ -102,6 +102,31 @@ app.get('/', (req, res) => {
           width: 100vw;
           color: navy;
         }
+
+        .btn-container {
+          text-align: center; /* Center the buttons */
+        }
+        
+        .btn {
+          display: inline-block;
+          padding: 10px 20px;
+          margin: 10px 0;
+          background-color: #6200ea; /* Button background color */
+          color: #ffffff; /* Button text color */
+          text-align: center;
+          text-decoration: none; /* Remove underline from links */
+          border-radius: 4px; /* Rounded corners */
+          font-size: 1.2em; /* Larger font size */
+          font-weight: bold; /* Bold text */
+          border: none; /* Remove border */
+          cursor: pointer; /* Pointer cursor */
+          transition: background-color 0.3s; /* Smooth transition for hover effect */
+        }
+        
+        .btn:hover {
+          background-color: #3700b3; /* Darker background color on hover */
+        }
+
       </style>
     </head>
     <body>
