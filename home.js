@@ -100,7 +100,6 @@ app.get('/', (req, res) => {
           align-items: center;
           height: 100vh;
           width: 100vw;
-          color: navy;
         }
 
         .btn-container {
@@ -120,13 +119,8 @@ app.get('/', (req, res) => {
           font-weight: bold; /* Bold text */
           border: none; /* Remove border */
           cursor: pointer; /* Pointer cursor */
-          transition: background-color 0.3s; /* Smooth transition for hover effect */
-        }
+          }
         
-        .btn:hover {
-          background-color: #3700b3; /* Darker background color on hover */
-        }
-
       </style>
     </head>
     <body>
