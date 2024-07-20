@@ -95,11 +95,11 @@ app.get('/', (req, res) => {
           background-size: cover;
           background-repeat: no-repeat;
           margin: 0;
-          padding: 0;
           display: flex;
           justify-content: center;
           align-items: center;
           height: 100vh;
+          width: 100vw;
           color: navy;
         }
       </style>
