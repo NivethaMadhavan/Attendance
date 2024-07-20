@@ -109,9 +109,9 @@ app.get('/', (req, res) => {
         
         .btn {
           display: inline-block;
-          padding: 10px 20px;
-          margin: 10px 0;
-          background-color: #6200ea; /* Button background color */
+          padding: 5px 20px;
+          margin: 5px 0;
+          background-color: rgb(161, 134, 134); /* Button background color */
           color: #ffffff; /* Button text color */
           text-align: center;
           text-decoration: none; /* Remove underline from links */
