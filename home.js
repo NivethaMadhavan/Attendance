@@ -116,7 +116,7 @@ app.get('/login', (req, res) => {
       <title>Login</title>
       <style>
         body {
-          background-image: url('https://img.lovepik.com/background/20211029/medium/lovepik-night-sky-mobile-wallpaper-background-image_400207778.jpg');
+          background-image: url('https://c4.wallpaperflare.com/wallpaper/890/165/318/5-centimeters-per-second-clouds-sky-anime-wallpaper-preview.jpg');
           background-size: cover;
           background-repeat: no-repeat;
           background-position: center;
@@ -248,7 +248,7 @@ app.get('/register', (req, res) => {
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           background-color: teal;
           background-size: contain;
-          background-image: url("hire_now_bg.jpg") fixed;
+          background-image:url('https://i.redd.it/z39ux6vk5hgb1.jpg') ;
           background-position: center;
           margin: 0;
           padding: 0;
@@ -570,7 +570,7 @@ app.get('/submit', async (req, res) => {
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               background-color: teal;
               background-size: contain;
-              background-image: url("hire_now_bg.jpg") fixed;
+              background-image: url('https://assets.hongkiat.com/uploads/cartoonic-mobile-wallpapers/preview/cartoonic-mobile-wallpaper-34.jpg') fixed;
               background-position: center;
               margin: 0;
               padding: 0;
