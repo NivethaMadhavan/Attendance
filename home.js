@@ -154,6 +154,7 @@ app.get('/login', (req, res) => {
           margin-bottom: 16px;
           border: 1px solid #333;
           border-radius: 4px;
+          align: center;
           background-color: #333;
           color: #ffffff;
         }
