@@ -89,7 +89,6 @@ app.get('/', (req, res) => {
         /* Your existing styles */
         body {
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background-color: teal;
           background-size: contain;
           background-image:url('https://i.pinimg.com/originals/ff/3a/94/ff3a942d7d5cb0f96c1978f97e41dc28.jpg') ;
           background-position: center;
@@ -584,7 +583,36 @@ app.get('/submit', async (req, res) => {
     const requestedQrCode = parseInt(req.query.qrcode);
     const className = req.query.className; // Get className from query
     if (qrCodeCounter !== requestedQrCode) {
-      res.send('Rejected');
+      res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width-device-width, initial-scale=1.0">
+          <title>Attendance</title>
+          <link rel="icon" href="letter_logo.png" type="image/x-icon">
+          <head>
+          <style>
+            body {
+              background-size: contain;
+              background-image:url('https://i.pinimg.com/originals/ff/3a/94/ff3a942d7d5cb0f96c1978f97e41dc28.jpg') ;
+              background-position: center;
+              margin: 0;
+              padding: 0;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+              color: navy;
+            }
+          </style>
+          </head>
+          <body>
+            <h1> Rejected: QR code not a match </h1>
+          </body>
+          </html>
+          `
+            );
       console.log(`Received qr code : "${requestedQrCode}", Current qr code : "${qrCodeCounter}"`);
     } else {
       res.send(`
