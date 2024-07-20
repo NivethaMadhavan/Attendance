@@ -91,7 +91,7 @@ app.get('/', (req, res) => {
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           background-color: teal;
           background-size: contain;
-          background-image:url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSloRi5zyGkSRRYag5h8Pwa61-i5VQuVuLkBw&s') ;
+          background-image:url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQifdowBVErn3XfDRk174_fJu_6xT5uXcbABA&s') ;
           background-position: center;
           margin: 0;
           padding: 0;
@@ -390,7 +390,7 @@ app.get('/dashboard', async (req, res) => {
                background-repeat: no-repeat;
                background-position: center;
                background-attachment: fixed;
-               color: #ffffff;
+               color: black;
                font-size: 2em; /* Adjust the size as needed */
                font-weight: bold; /* Make the text bold */
                font-family: Arial, sans-serif;
