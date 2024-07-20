@@ -137,6 +137,8 @@ app.get('/login', (req, res) => {
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
           max-width: 400px;
           width: 70%;
+          align: center;
+          align-items: center;
           box-sizing: border-box;
         }
         h1 {
