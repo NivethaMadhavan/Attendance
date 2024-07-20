@@ -85,8 +85,22 @@ app.get('/', (req, res) => {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Home</title>
-      <style>
+      <style> 
         /* Your existing styles */
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background-color: teal;
+          background-size: contain;
+          background-image:url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSloRi5zyGkSRRYag5h8Pwa61-i5VQuVuLkBw&s') ;
+          background-position: center;
+          margin: 0;
+          padding: 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          color: navy;
+        }
       </style>
     </head>
     <body>
@@ -377,6 +391,8 @@ app.get('/dashboard', async (req, res) => {
                background-position: center;
                background-attachment: fixed;
                color: #ffffff;
+               font-size: 2em; /* Adjust the size as needed */
+               font-weight: bold; /* Make the text bold */
                font-family: Arial, sans-serif;
                display: flex;
                justify-content: center;
