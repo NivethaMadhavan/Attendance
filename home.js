@@ -116,7 +116,7 @@ app.get('/login', (req, res) => {
       <title>Login</title>
       <style>
         body {
-          background-image: url('https://wallpaper.forfun.com/fetch/44/447811c497304720cb674d3c74c4f778.jpeg');
+          background-image: url('https://img.lovepik.com/background/20211029/medium/lovepik-night-sky-mobile-wallpaper-background-image_400207778.jpg');
           background-size: cover;
           background-repeat: no-repeat;
           background-position: center;
@@ -403,6 +403,23 @@ app.get('/teacher-dashboard', (req, res) => {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Teacher Dashboard</title>
       <style>
+
+         body {
+          background-image: url('https://e1.pxfuel.com/desktop-wallpaper/62/975/desktop-wallpaper-anime-cloudy-sky-backgrounds-beautiful-cloudy-sky-anime.jpg');
+          background-size: cover;
+          background-repeat: no-repeat;
+          background-position: center;
+          background-attachment: fixed;
+          color: #ffffff;
+          font-family: Arial, sans-serif;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          width: 100vw;
+          margin: 0;
+        }
+         
         .container {
           text-align: center;
         }
